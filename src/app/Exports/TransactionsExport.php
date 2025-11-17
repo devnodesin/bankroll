@@ -21,15 +21,17 @@ class TransactionsExport implements FromCollection, WithHeadings, WithStyles, Wi
 
     public function collection()
     {
-        return $this->transactions->map(function ($transaction) {
+        $currencySymbol = config('app.currency_symbol', '$');
+        
+        return $this->transactions->map(function ($transaction) use ($currencySymbol) {
             return [
                 'date' => $transaction->date->format('M d, Y'),
                 'description' => $transaction->description,
                 'category' => $transaction->category ? $transaction->category->name : '-',
                 'notes' => $transaction->notes ?? '-',
-                'withdraw' => $transaction->withdraw ? '$' . number_format($transaction->withdraw, 2) : '-',
-                'deposit' => $transaction->deposit ? '$' . number_format($transaction->deposit, 2) : '-',
-                'balance' => '$' . number_format($transaction->balance, 2),
+                'withdraw' => $transaction->withdraw ? $currencySymbol . number_format($transaction->withdraw, 2) : '-',
+                'deposit' => $transaction->deposit ? $currencySymbol . number_format($transaction->deposit, 2) : '-',
+                'balance' => $currencySymbol . number_format($transaction->balance, 2),
             ];
         });
     }
@@ -49,27 +51,38 @@ class TransactionsExport implements FromCollection, WithHeadings, WithStyles, Wi
 
     public function styles(Worksheet $sheet)
     {
-        return [
-            1 => [
-                'font' => ['bold' => true, 'size' => 12],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'E9ECEF']
+        // Calculate the actual data range to avoid iterating over millions of empty rows
+        $rowCount = $this->transactions->count() + 1; // +1 for header row
+        
+        // Apply styles only to the actual data range
+        $dataRange = 'A1:G' . $rowCount;
+        
+        // Style the header row
+        $sheet->getStyle('A1:G1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 12],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E9ECEF']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
                 ],
+            ],
+        ]);
+        
+        // Apply borders to all data cells (if there's data)
+        if ($rowCount > 1) {
+            $sheet->getStyle($dataRange)->applyFromArray([
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
                     ],
                 ],
-            ],
-            'A:G' => [
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                    ],
-                ],
-            ],
-        ];
+            ]);
+        }
+        
+        return [];
     }
 
     public function columnWidths(): array

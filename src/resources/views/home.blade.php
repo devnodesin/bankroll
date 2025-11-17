@@ -211,6 +211,7 @@
 @push('scripts')
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const currencySymbol = @json($currencySymbol);
     
     // Categories modal elements
     const categoriesModal = document.getElementById('categoriesModal');
@@ -554,7 +555,7 @@
 
     function formatCurrency(value) {
         if (!value) return '-';
-        return '$' + parseFloat(value).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        return currencySymbol + parseFloat(value).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
     }
 
     function truncateText(text, maxLength) {

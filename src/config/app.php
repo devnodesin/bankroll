@@ -28,6 +28,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Currency Symbol
+    |--------------------------------------------------------------------------
+    |
+    | This value is the currency symbol used throughout the application for
+    | displaying monetary amounts in exports and views. You can customize
+    | this to match your local currency (e.g., '$', '€', '£', '₹').
+    |
+    */
+
+    'currency_symbol' => env('CURRENCY_SYMBOL', '$'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

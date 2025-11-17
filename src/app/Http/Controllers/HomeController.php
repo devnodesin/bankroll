@@ -26,8 +26,9 @@ class HomeController extends Controller
             ->pluck('year');
         
         $categories = Category::orderBy('name')->get();
+        $currencySymbol = config('app.currency_symbol', '$');
         
-        return view('home', compact('banks', 'years', 'categories'));
+        return view('home', compact('banks', 'years', 'categories', 'currencySymbol'));
     }
 
     /**

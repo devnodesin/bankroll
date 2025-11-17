@@ -71,9 +71,9 @@
                 <td>{{ $transaction->description }}</td>
                 <td>{{ $transaction->category ? $transaction->category->name : '-' }}</td>
                 <td>{{ $transaction->notes ?? '-' }}</td>
-                <td class="text-end">{{ $transaction->withdraw ? '$' . number_format($transaction->withdraw, 2) : '-' }}</td>
-                <td class="text-end">{{ $transaction->deposit ? '$' . number_format($transaction->deposit, 2) : '-' }}</td>
-                <td class="text-end">${{ number_format($transaction->balance, 2) }}</td>
+                <td class="text-end">{{ $transaction->withdraw ? config('app.currency_symbol', '$') . number_format($transaction->withdraw, 2) : '-' }}</td>
+                <td class="text-end">{{ $transaction->deposit ? config('app.currency_symbol', '$') . number_format($transaction->deposit, 2) : '-' }}</td>
+                <td class="text-end">{{ config('app.currency_symbol', '$') }}{{ number_format($transaction->balance, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
