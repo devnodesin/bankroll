@@ -80,6 +80,12 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Transactions</h5>
+                        <button type="button" class="btn btn-success" id="saveChanges" style="display: none;">
+                            <i class="bi bi-save"></i> Save Changes
+                        </button>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
@@ -116,8 +122,12 @@
     const noDataMessage = document.getElementById('noDataMessage');
     const transactionsSection = document.getElementById('transactionsSection');
     const transactionsTableBody = document.getElementById('transactionsTableBody');
+    const saveChangesBtn = document.getElementById('saveChanges');
 
     const categories = @json($categories);
+    
+    // Track pending changes
+    let pendingChanges = {};
 
     // Load transactions
     loadBtn.addEventListener('click', async () => {
@@ -162,12 +172,14 @@
     // Display transactions in table
     function displayTransactions(transactions) {
         transactionsTableBody.innerHTML = '';
+        pendingChanges = {}; // Reset pending changes
+        saveChangesBtn.style.display = 'none'; // Hide save button
         
         transactions.forEach(transaction => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="bg-light">${formatDate(transaction.date)}</td>
-                <td class="bg-light" title="${transaction.description}">${truncateText(transaction.description, 50)}</td>
+                <td>${formatDate(transaction.date)}</td>
+                <td title="${transaction.description}">${truncateText(transaction.description, 50)}</td>
                 <td>
                     <select class="form-select form-select-sm category-select" data-transaction-id="${transaction.id}">
                         <option value="">None</option>
@@ -184,9 +196,9 @@
                            value="${transaction.notes || ''}" 
                            placeholder="Add notes...">
                 </td>
-                <td class="bg-light text-end">${formatCurrency(transaction.withdraw)}</td>
-                <td class="bg-light text-end">${formatCurrency(transaction.deposit)}</td>
-                <td class="bg-light text-end">${formatCurrency(transaction.balance)}</td>
+                <td class="text-end">${formatCurrency(transaction.withdraw)}</td>
+                <td class="text-end">${formatCurrency(transaction.deposit)}</td>
+                <td class="text-end">${formatCurrency(transaction.balance)}</td>
             `;
             transactionsTableBody.appendChild(row);
         });
@@ -195,26 +207,67 @@
 
         // Add event listeners for category changes
         document.querySelectorAll('.category-select').forEach(select => {
-            select.addEventListener('change', async (e) => {
-                await updateTransaction(e.target.dataset.transactionId, {
-                    category_id: e.target.value || null
-                });
+            select.addEventListener('change', (e) => {
+                const transactionId = e.target.dataset.transactionId;
+                if (!pendingChanges[transactionId]) {
+                    pendingChanges[transactionId] = {};
+                }
+                pendingChanges[transactionId].category_id = e.target.value || null;
+                saveChangesBtn.style.display = 'block'; // Show save button
             });
         });
 
-        // Add event listeners for notes changes (with debounce)
+        // Add event listeners for notes changes
         document.querySelectorAll('.notes-input').forEach(input => {
-            let timeout;
             input.addEventListener('input', (e) => {
-                clearTimeout(timeout);
-                timeout = setTimeout(async () => {
-                    await updateTransaction(e.target.dataset.transactionId, {
-                        notes: e.target.value || null
-                    });
-                }, 1000);
+                const transactionId = e.target.dataset.transactionId;
+                if (!pendingChanges[transactionId]) {
+                    pendingChanges[transactionId] = {};
+                }
+                pendingChanges[transactionId].notes = e.target.value || null;
+                saveChangesBtn.style.display = 'block'; // Show save button
             });
         });
     }
+
+    // Save all pending changes
+    saveChangesBtn.addEventListener('click', async () => {
+        if (Object.keys(pendingChanges).length === 0) {
+            return;
+        }
+
+        saveChangesBtn.disabled = true;
+        saveChangesBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+        let allSuccess = true;
+        for (const [transactionId, data] of Object.entries(pendingChanges)) {
+            const success = await updateTransaction(transactionId, data);
+            if (!success) {
+                allSuccess = false;
+            }
+        }
+
+        if (allSuccess) {
+            pendingChanges = {};
+            saveChangesBtn.style.display = 'none';
+            
+            // Show success feedback
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                Changes saved successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        } else {
+            alert('Some changes failed to save. Please try again.');
+        }
+
+        saveChangesBtn.disabled = false;
+        saveChangesBtn.innerHTML = '<i class="bi bi-save"></i> Save Changes';
+    });
 
     // Update transaction
     async function updateTransaction(transactionId, data) {
@@ -230,11 +283,10 @@
             });
 
             const result = await response.json();
-            if (!result.success) {
-                alert('Error updating transaction');
-            }
+            return result.success;
         } catch (error) {
-            alert('Error updating transaction: ' + error.message);
+            console.error('Error updating transaction:', error);
+            return false;
         }
     }
 

@@ -11,30 +11,30 @@ class UserRemoveCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'user:remove {email}';
+    protected $signature = 'user:remove {username}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Remove a user';
+    protected $description = 'Remove a user by username';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $email = $this->argument('email');
+        $username = $this->argument('username');
         
-        $user = \App\Models\User::where('email', $email)->first();
+        $user = \App\Models\User::where('name', $username)->first();
         
         if (!$user) {
-            $this->error("User with email '{$email}' not found.");
+            $this->error("User with username '{$username}' not found.");
             return 1;
         }
         
-        $username = $user->name;
+        $email = $user->email;
         $user->delete();
         
         $this->info("User '{$username}' ({$email}) deleted successfully.");
