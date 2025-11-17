@@ -1,3 +1,6 @@
+---
+applyTo: "src/**/*.{php,blade.php,json,xml,yml,env}"
+---
 # Laravel Development Instructions for Bankroll
 
 ## Laravel Version
@@ -293,8 +296,8 @@ In `config/app.php`:
 ### Environment Variables
 ```env
 APP_NAME=Bankroll
-DB_CONNECTION=mysql
-DB_DATABASE=bankroll
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
 ```
 
 ## Remember

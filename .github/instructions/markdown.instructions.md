@@ -1,3 +1,7 @@
+---
+applyTo: '**/*.md'
+---
+
 # Markdown Documentation Instructions for Bankroll
 
 ## Overview
@@ -415,7 +419,7 @@ php artisan migrate --seed
 In your `.env` file:
 ```env
 APP_NAME=Bankroll
-DB_DATABASE=bankroll
+DB_CONNECTION=sqlite
 ```
 ```
 

@@ -1,3 +1,7 @@
+---
+applyTo: "**/*.{blade.php}"
+---
+
 # Blade Template Instructions for Bankroll
 
 ## Overview

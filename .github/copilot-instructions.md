@@ -7,7 +7,7 @@ Bankroll is a Laravel web application for importing, classifying, and exporting 
 - **Backend**: Laravel (latest stable version)
 - **Frontend**: Blade templating engine
 - **Styling**: Bootstrap 5.3 (only framework allowed)
-- **Database**: SQLLite
+- **Database**: SQLite
 - **Language**: PHP 8.1+
 
 ## Core Principles
