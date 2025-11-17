@@ -24,6 +24,9 @@ class ImportController extends Controller
         try {
             $file = $request->file('file');
             $bankName = $request->bank_name;
+            
+            // Ensure bank exists in banks table
+            \App\Models\Bank::firstOrCreate(['name' => $bankName]);
 
             // Load the spreadsheet
             $spreadsheet = IOFactory::load($file->getPathname());
@@ -80,13 +83,18 @@ class ImportController extends Controller
                     $date = $this->parseDate($row[$dateIdx]);
                     
                     if (!$date) {
-                        $errors[] = "Row " . ($i + 1) . ": Invalid date format";
+                        $errors[] = "Row " . ($i + 1) . ": Invalid date format '{$row[$dateIdx]}'. Expected DD/MM/YYYY (e.g., 15/03/2024)";
                         continue;
                     }
 
                     $withdraw = $this->parseAmount($row[$withdrawIdx] ?? '');
                     $deposit = $this->parseAmount($row[$depositIdx] ?? '');
                     $balance = $this->parseAmount($row[$balanceIdx] ?? '');
+
+                    if ($balance === null) {
+                        $errors[] = "Row " . ($i + 1) . ": Balance is required";
+                        continue;
+                    }
 
                     if ($withdraw === null && $deposit === null) {
                         $errors[] = "Row " . ($i + 1) . ": At least one of Withdraw or Deposit must have a value";
@@ -152,7 +160,7 @@ class ImportController extends Controller
     }
 
     /**
-     * Parse date from various formats
+     * Parse date from various formats (DD/MM/YYYY is primary format)
      */
     private function parseDate($value)
     {
@@ -160,7 +168,7 @@ class ImportController extends Controller
             return null;
         }
 
-        // Try to parse as Excel date number
+        // Try to parse as Excel date number first
         if (is_numeric($value)) {
             try {
                 $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
@@ -170,12 +178,14 @@ class ImportController extends Controller
             }
         }
 
-        // Try common date formats
-        $formats = ['Y-m-d', 'd/m/Y', 'm/d/Y', 'd-m-Y', 'm-d-Y', 'Y/m/d'];
+        // Primary format: DD/MM/YYYY (Indian/European format)
+        // Try common date formats with DD/MM/YYYY as priority
+        $formats = ['d/m/Y', 'd-m-Y', 'd.m.Y', 'Y-m-d', 'm/d/Y', 'm-d-Y', 'Y/m/d'];
         foreach ($formats as $format) {
             try {
                 $date = \Carbon\Carbon::createFromFormat($format, trim($value));
-                if ($date) {
+                if ($date && $date->format($format) === trim($value)) {
+                    // Validate that the parsed date matches the input exactly
                     return $date;
                 }
             } catch (\Exception $e) {
@@ -183,7 +193,7 @@ class ImportController extends Controller
             }
         }
 
-        // Try natural language parsing
+        // Try natural language parsing as last resort
         try {
             return \Carbon\Carbon::parse($value);
         } catch (\Exception $e) {

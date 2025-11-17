@@ -12,6 +12,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 Route::middleware('auth')->group(function () {
     Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::post('/transactions/get', [App\Http\Controllers\HomeController::class, 'getTransactions'])->name('transactions.get');
+    Route::post('/transactions/available-months', [App\Http\Controllers\HomeController::class, 'getAvailableMonths'])->name('transactions.available-months');
     Route::patch('/transactions/{transaction}', [App\Http\Controllers\HomeController::class, 'updateTransaction'])->name('transactions.update');
     Route::post('/transactions/import', [App\Http\Controllers\ImportController::class, 'import'])->name('transactions.import');
     Route::get('/transactions/export/excel', [App\Http\Controllers\ExportController::class, 'exportExcel'])->name('transactions.export.excel');
@@ -23,4 +24,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/categories', [App\Http\Controllers\CategoryController::class, 'store'])->name('categories.store');
     Route::delete('/categories/{category}', [App\Http\Controllers\CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::get('/categories/all', [App\Http\Controllers\CategoryController::class, 'getAll'])->name('categories.all');
+    
+    // Bank management routes
+    Route::get('/banks', [App\Http\Controllers\BankController::class, 'index'])->name('banks.index');
+    Route::post('/banks', [App\Http\Controllers\BankController::class, 'store'])->name('banks.store');
+    Route::delete('/banks/{bank}', [App\Http\Controllers\BankController::class, 'destroy'])->name('banks.destroy');
 });

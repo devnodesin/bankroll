@@ -79,7 +79,13 @@ The configured currency symbol will be used in:
 
 ## Troubleshooting
 
-### Currency symbol not showing correctly
+### Currency symbol not showing correctly in PDF exports
+- The application uses DejaVu Sans font for PDF generation, which supports Unicode characters including ₹, €, £, ¥, etc.
+- DomPDF configuration has `convert_entities` set to `false` to preserve Unicode symbols
+- Ensure your `.env` file is saved with UTF-8 encoding
+- Clear application cache: `php artisan config:clear`
+
+### Currency symbol not showing correctly in other views
 - Ensure your system and application support UTF-8 encoding
 - Check that your `.env` file is saved with UTF-8 encoding
 - Clear application cache: `php artisan config:clear`
@@ -105,3 +111,13 @@ The implementation ensures consistent currency display across:
 - Backend: `App\Exports\TransactionsExport`
 - Views: `resources/views/exports/transactions-pdf.blade.php`
 - Frontend: `resources/views/home.blade.php` (JavaScript formatting)
+
+### PDF Export Unicode Support
+
+PDF exports use the following configuration to support Unicode currency symbols:
+
+1. **Font**: DejaVu Sans font family (supports Unicode characters)
+2. **Encoding**: UTF-8 meta charset in the PDF template
+3. **DomPDF Config**: `convert_entities` set to `false` to preserve Unicode characters
+
+This ensures that symbols like ₹ (Indian Rupee), € (Euro), £ (Pound), ¥ (Yen/Yuan) render correctly in PDF exports.
