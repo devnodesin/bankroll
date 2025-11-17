@@ -11,6 +11,6 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 // Protected routes
 Route::middleware('auth')->group(function () {
     Route::get('/', function () {
-        return view('welcome');
+        return view('home');
     })->name('home');
 });

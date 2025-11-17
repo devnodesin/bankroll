@@ -39,3 +39,21 @@ All notable changes to the Bankroll project will be documented in this file.
 - Created default admin user (admin@bankroll.local / password123)
 - Session regeneration on login for security
 - CSRF protection on all forms
+
+### Added - GH-004: Base Layout with Bootstrap 5.3 and Theme Switcher
+
+- Created base Blade layout (`layouts/app.blade.php`) with Bootstrap 5.3
+- Implemented header component with:
+  - Application name on the left
+  - Theme toggle button with icon
+  - Logout button for authenticated users
+- Implemented footer component with app name, version, and credit
+- Added theme switcher functionality with three modes:
+  - Light mode (sun icon)
+  - Dark mode (moon icon)
+  - Auto mode (circle-half icon) - follows system preference
+- Theme preference persists in localStorage
+- Responsive design using Bootstrap grid system
+- All Bootstrap 5.3 components styled correctly
+- Theme automatically applies on page load
+- System theme change detection when in auto mode
