@@ -2,6 +2,20 @@
 
 ## [Unreleased](https://github.com/laravel/laravel/compare/v12.10.0...12.x)
 
+### Added - 2025-11-17
+
+#### GH-007: Import Transactions Feature
+- Added ImportController to handle file uploads and transaction imports
+- Support for XLS, XLSX, and CSV file formats (max 5MB)
+- Strict column validation (Date, Description, Withdraw, Deposit, Balance)
+- Comprehensive data validation with clear error messages
+- Database transaction wrapping for atomic imports
+- Import modal UI with file upload and bank name input
+- Auto-refresh transaction list after successful import
+- Row-level error reporting for validation failures
+- Support for multiple date formats and Excel date numbers
+- Smart parsing of currency values (removes symbols and commas)
+
 ## [v12.10.0](https://github.com/laravel/laravel/compare/v12.9.1...v12.10.0) - 2025-11-04
 
 * Add background driver by [@barryvdh](https://github.com/barryvdh) in https://github.com/laravel/laravel/pull/6699

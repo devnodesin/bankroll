@@ -46,9 +46,12 @@
                                 <option value="12">December</option>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-primary w-100" id="loadTransactions">
-                                <i class="bi bi-search"></i> Load Transactions
+                        <div class="col-md-3 d-flex align-items-end gap-2">
+                            <button type="button" class="btn btn-primary flex-grow-1" id="loadTransactions">
+                                <i class="bi bi-search"></i> Load
+                            </button>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                                <i class="bi bi-upload"></i> Import
                             </button>
                         </div>
                     </div>
@@ -105,6 +108,43 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Import Transactions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="importForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="importBankName" class="form-label">Bank Name</label>
+                            <input type="text" class="form-control" id="importBankName" name="bank_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Select File</label>
+                            <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
+                            <div class="form-text">Accepted formats: XLS, XLSX, CSV (Max 5MB)</div>
+                            <div class="form-text mt-2">
+                                <strong>Required columns:</strong> Date, Description, Withdraw, Deposit, Balance
+                            </div>
+                        </div>
+                        <div id="importErrors" class="alert alert-danger d-none"></div>
+                        <div id="importSuccess" class="alert alert-success d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="importButton">
+                            <i class="bi bi-upload"></i> Import
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -305,5 +345,79 @@
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     }
+
+    // Import form handling
+    const importForm = document.getElementById('importForm');
+    const importButton = document.getElementById('importButton');
+    const importErrors = document.getElementById('importErrors');
+    const importSuccess = document.getElementById('importSuccess');
+    const importModal = document.getElementById('importModal');
+
+    importForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        importErrors.classList.add('d-none');
+        importSuccess.classList.add('d-none');
+        importButton.disabled = true;
+        importButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importing...';
+
+        const formData = new FormData(importForm);
+
+        try {
+            const response = await fetch('{{ route('transactions.import') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                importSuccess.textContent = data.message;
+                importSuccess.classList.remove('d-none');
+                importForm.reset();
+                
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(importModal).hide();
+                    importSuccess.classList.add('d-none');
+                    
+                    // Reload transactions if filters are set
+                    if (bankFilter.value && yearFilter.value && monthFilter.value) {
+                        loadBtn.click();
+                    }
+                }, 2000);
+            } else {
+                let errorMessage = data.message;
+                if (data.errors && Array.isArray(data.errors)) {
+                    errorMessage += '<ul class="mb-0 mt-2">';
+                    data.errors.forEach(err => {
+                        errorMessage += `<li>${err}</li>`;
+                    });
+                    errorMessage += '</ul>';
+                }
+                if (data.required && data.found) {
+                    errorMessage += '<div class="mt-2"><strong>Required:</strong> ' + data.required.join(', ') + '</div>';
+                    errorMessage += '<div><strong>Found:</strong> ' + data.found.join(', ') + '</div>';
+                }
+                importErrors.innerHTML = errorMessage;
+                importErrors.classList.remove('d-none');
+            }
+        } catch (error) {
+            importErrors.textContent = 'Import failed: ' + error.message;
+            importErrors.classList.remove('d-none');
+        } finally {
+            importButton.disabled = false;
+            importButton.innerHTML = '<i class="bi bi-upload"></i> Import';
+        }
+    });
+
+    // Reset modal on close
+    importModal.addEventListener('hidden.bs.modal', () => {
+        importForm.reset();
+        importErrors.classList.add('d-none');
+        importSuccess.classList.add('d-none');
+    });
 </script>
 @endpush

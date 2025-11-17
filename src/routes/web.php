@@ -13,4 +13,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::post('/transactions/get', [App\Http\Controllers\HomeController::class, 'getTransactions'])->name('transactions.get');
     Route::patch('/transactions/{transaction}', [App\Http\Controllers\HomeController::class, 'updateTransaction'])->name('transactions.update');
+    Route::post('/transactions/import', [App\Http\Controllers\ImportController::class, 'import'])->name('transactions.import');
 });
