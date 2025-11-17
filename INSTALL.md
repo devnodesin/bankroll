@@ -35,22 +35,26 @@ php artisan serve
 
 Visit: `http://127.0.0.1:8000`
 
-
+**Add/Remove user**
 
 ```bash
-# Add user
-$ php artisan user:add username email@domain.com passwrod
-User 'username' created successfully with ID: 1
-
-# List User
-$ php artisan user:list                                    
-+----+---------+---------------------+---------------------+
-| ID | Name    | Email               | Created At          |
-+----+---------+---------------------+---------------------+      
-| 1  | usernae | email@domain.com | 2025-11-17 12:36:11 |      
-+----+---------+---------------------+---------------------+ 
-
-# Remove user
-php artisan user:remove email@domain.com             
-User 'usernae' (email@domain.com) deleted successfully.
+$ php artisan user:add mohamed thalib
+User 'mohamed' created successfully with ID: 1
+$ php artisan user:add thalib mohamed
+User 'thalib' created successfully with ID: 2
+$ php artisan user:list
++----+---------+------------------------+---------------------+
+| ID | Name    | Email                  | Created At          |
++----+---------+------------------------+---------------------+
+| 1  | mohamed | mohamed@bankroll.local | 2025-11-17 14:01:23 |
+| 2  | thalib  | thalib@bankroll.local  | 2025-11-17 14:02:03 |
++----+---------+------------------------+---------------------+
+$ php artisan user:remove thalib
+User 'thalib' (thalib@bankroll.local) deleted successfully.
+$ php artisan user:list
++----+---------+------------------------+---------------------+
+| ID | Name    | Email                  | Created At          |
++----+---------+------------------------+---------------------+
+| 1  | mohamed | mohamed@bankroll.local | 2025-11-17 14:01:23 |
++----+---------+------------------------+---------------------+
 ```
