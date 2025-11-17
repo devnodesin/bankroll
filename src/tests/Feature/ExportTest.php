@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Transaction;
-use App\Models\Category;
 use App\Exports\TransactionsExport;
+use App\Models\Category;
+use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
+use Tests\TestCase;
 
 class ExportTest extends TestCase
 {
@@ -17,17 +17,17 @@ class ExportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create a test user
         $this->user = User::factory()->create([
             'name' => 'testuser',
             'email' => 'test@example.com',
             'password' => bcrypt('password'),
         ]);
-        
+
         // Create test categories
         Category::create(['name' => 'Fuel', 'is_system' => true]);
-        
+
         // Create test transactions (using DB insert to bypass guarded fields)
         for ($i = 1; $i <= 50; $i++) {
             \DB::table('transactions')->insert([
@@ -90,7 +90,7 @@ class ExportTest extends TestCase
     public function test_transactions_export_uses_custom_currency_symbol(): void
     {
         config(['app.currency_symbol' => '€']);
-        
+
         $transactions = Transaction::where('bank_name', 'Test Bank')
             ->where('year', now()->year)
             ->where('month', now()->month)
@@ -112,17 +112,17 @@ class ExportTest extends TestCase
             ->get();
 
         $export = new TransactionsExport($transactions);
-        
+
         // This should complete quickly without timing out
         $startTime = microtime(true);
-        
+
         Excel::fake();
         Excel::download($export, 'test.xlsx');
-        
+
         $endTime = microtime(true);
         $executionTime = $endTime - $startTime;
 
         // Export should complete in less than 5 seconds for 50 records
-        $this->assertLessThan(5, $executionTime, 'Export took too long: ' . $executionTime . ' seconds');
+        $this->assertLessThan(5, $executionTime, 'Export took too long: '.$executionTime.' seconds');
     }
 }

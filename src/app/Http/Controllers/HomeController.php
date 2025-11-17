@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction;
 use App\Models\Category;
+use App\Models\Transaction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class HomeController extends Controller
 {
@@ -19,15 +19,15 @@ class HomeController extends Controller
             ->distinct()
             ->orderBy('bank_name')
             ->pluck('bank_name');
-        
+
         $years = Transaction::select('year')
             ->distinct()
             ->orderByDesc('year')
             ->pluck('year');
-        
+
         $categories = Category::orderBy('name')->get();
         $currencySymbol = config('app.currency_symbol', '$');
-        
+
         return view('home', compact('banks', 'years', 'categories', 'currencySymbol'));
     }
 
