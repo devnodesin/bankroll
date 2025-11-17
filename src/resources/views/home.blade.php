@@ -224,7 +224,13 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="importBankName" class="form-label">Bank Name</label>
-                            <input type="text" class="form-control" id="importBankName" name="bank_name" required>
+                            <select class="form-select" id="importBankName" name="bank_name" required>
+                                <option value="">Select Bank</option>
+                                @foreach($banks as $bank)
+                                    <option value="{{ $bank }}">{{ $bank }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">If bank is not listed, add it using the Bank Management button first.</div>
                         </div>
                         <div class="mb-3">
                             <label for="importFile" class="form-label">Select File</label>
@@ -549,6 +555,7 @@
             const data = await response.json();
 
             if (data.success) {
+                // Update main filter dropdown
                 const currentSelection = bankFilter.value;
                 bankFilter.innerHTML = '<option value="">Select Bank</option>';
                 data.banks.forEach(bank => {
@@ -559,6 +566,20 @@
                         option.selected = true;
                     }
                     bankFilter.appendChild(option);
+                });
+
+                // Update import modal dropdown
+                const importBankName = document.getElementById('importBankName');
+                const currentImportSelection = importBankName.value;
+                importBankName.innerHTML = '<option value="">Select Bank</option>';
+                data.banks.forEach(bank => {
+                    const option = document.createElement('option');
+                    option.value = bank.name;
+                    option.textContent = bank.name;
+                    if (bank.name === currentImportSelection) {
+                        option.selected = true;
+                    }
+                    importBankName.appendChild(option);
                 });
             }
         } catch (error) {
