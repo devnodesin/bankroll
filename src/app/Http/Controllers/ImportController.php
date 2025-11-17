@@ -24,6 +24,9 @@ class ImportController extends Controller
         try {
             $file = $request->file('file');
             $bankName = $request->bank_name;
+            
+            // Ensure bank exists in banks table
+            \App\Models\Bank::firstOrCreate(['name' => $bankName]);
 
             // Load the spreadsheet
             $spreadsheet = IOFactory::load($file->getPathname());

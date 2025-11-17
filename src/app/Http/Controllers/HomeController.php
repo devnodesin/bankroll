@@ -15,10 +15,15 @@ class HomeController extends Controller
      */
     public function index(): View
     {
-        $banks = Transaction::select('bank_name')
-            ->distinct()
-            ->orderBy('bank_name')
-            ->pluck('bank_name');
+        // Get banks from banks table, fallback to transaction data if none exist
+        $banks = \App\Models\Bank::orderBy('name')->pluck('name');
+        
+        if ($banks->isEmpty()) {
+            $banks = Transaction::select('bank_name')
+                ->distinct()
+                ->orderBy('bank_name')
+                ->pluck('bank_name');
+        }
 
         $years = Transaction::select('year')
             ->distinct()

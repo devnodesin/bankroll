@@ -50,6 +50,9 @@
                             <button type="button" class="btn btn-primary flex-grow-1" id="loadTransactions">
                                 <i class="bi bi-search"></i> Load
                             </button>
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#banksModal">
+                                <i class="bi bi-bank"></i>
+                            </button>
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
                                 <i class="bi bi-upload"></i> Import
                             </button>
@@ -159,6 +162,45 @@
                         <h6 class="text-muted">Custom Categories</h6>
                         <div class="list-group" id="customCategoriesList">
                             <div class="text-center py-3 text-muted">No custom categories yet</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banks Management Modal -->
+    <div class="modal fade" id="banksModal" tabindex="-1" aria-labelledby="banksModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="banksModalLabel">Manage Banks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Add Bank Form -->
+                    <form id="addBankForm" class="mb-4">
+                        @csrf
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="bankName" name="name" placeholder="Enter bank name" required maxlength="100">
+                            <button type="submit" class="btn btn-primary" id="addBankBtn">
+                                <i class="bi bi-plus-circle"></i> Add Bank
+                            </button>
+                        </div>
+                        <div id="bankErrors" class="alert alert-danger mt-2 d-none"></div>
+                        <div id="bankSuccess" class="alert alert-success mt-2 d-none"></div>
+                    </form>
+
+                    <!-- Banks List -->
+                    <div>
+                        <h6 class="text-muted">Banks</h6>
+                        <div class="list-group" id="banksList">
+                            <div class="text-center py-3">
+                                <span class="spinner-border spinner-border-sm"></span> Loading...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -380,6 +422,147 @@
             }
         } catch (error) {
             console.error('Failed to refresh categories:', error);
+        }
+    }
+
+    // Banks management
+    const banksModal = document.getElementById('banksModal');
+    const addBankForm = document.getElementById('addBankForm');
+    const bankNameInput = document.getElementById('bankName');
+    const addBankBtn = document.getElementById('addBankBtn');
+    const bankErrors = document.getElementById('bankErrors');
+    const bankSuccess = document.getElementById('bankSuccess');
+    const banksList = document.getElementById('banksList');
+
+    // Load banks when modal is opened
+    banksModal.addEventListener('show.bs.modal', loadBanks);
+
+    async function loadBanks() {
+        try {
+            const response = await fetch('{{ route('banks.index') }}', {
+                headers: { 'X-CSRF-TOKEN': csrfToken }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                displayBanks(data.banks);
+            }
+        } catch (error) {
+            console.error('Failed to load banks:', error);
+            banksList.innerHTML = '<div class="text-center text-danger">Failed to load banks</div>';
+        }
+    }
+
+    function displayBanks(banks) {
+        if (banks.length === 0) {
+            banksList.innerHTML = '<div class="text-center py-3 text-muted">No banks added yet</div>';
+            return;
+        }
+
+        banksList.innerHTML = banks.map(bank => `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <span>${bank.name}</span>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteBank(${bank.id}, '${bank.name}')">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        `).join('');
+    }
+
+    // Add bank
+    addBankForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        bankErrors.classList.add('d-none');
+        bankSuccess.classList.add('d-none');
+        addBankBtn.disabled = true;
+
+        try {
+            const response = await fetch('{{ route('banks.store') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ name: bankNameInput.value })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                bankSuccess.textContent = data.message;
+                bankSuccess.classList.remove('d-none');
+                bankNameInput.value = '';
+                await loadBanks();
+                await refreshBankDropdown();
+
+                setTimeout(() => bankSuccess.classList.add('d-none'), 3000);
+            } else {
+                bankErrors.textContent = data.message;
+                bankErrors.classList.remove('d-none');
+            }
+        } catch (error) {
+            bankErrors.textContent = 'Error adding bank: ' + error.message;
+            bankErrors.classList.remove('d-none');
+        } finally {
+            addBankBtn.disabled = false;
+        }
+    });
+
+    // Delete bank (global function for onclick)
+    window.deleteBank = async (id, name) => {
+        if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/banks/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                bankSuccess.textContent = data.message;
+                bankSuccess.classList.remove('d-none');
+                await loadBanks();
+                await refreshBankDropdown();
+
+                setTimeout(() => bankSuccess.classList.add('d-none'), 3000);
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            alert('Error deleting bank: ' + error.message);
+        }
+    };
+
+    // Refresh bank dropdown in filter
+    async function refreshBankDropdown() {
+        try {
+            const response = await fetch('{{ route('banks.index') }}', {
+                headers: { 'X-CSRF-TOKEN': csrfToken }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                const currentSelection = bankFilter.value;
+                bankFilter.innerHTML = '<option value="">Select Bank</option>';
+                data.banks.forEach(bank => {
+                    const option = document.createElement('option');
+                    option.value = bank.name;
+                    option.textContent = bank.name;
+                    if (bank.name === currentSelection) {
+                        option.selected = true;
+                    }
+                    bankFilter.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to refresh bank dropdown:', error);
         }
     }
 

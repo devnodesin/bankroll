@@ -23,4 +23,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/categories', [App\Http\Controllers\CategoryController::class, 'store'])->name('categories.store');
     Route::delete('/categories/{category}', [App\Http\Controllers\CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::get('/categories/all', [App\Http\Controllers\CategoryController::class, 'getAll'])->name('categories.all');
+    
+    // Bank management routes
+    Route::get('/banks', [App\Http\Controllers\BankController::class, 'index'])->name('banks.index');
+    Route::post('/banks', [App\Http\Controllers\BankController::class, 'store'])->name('banks.store');
+    Route::delete('/banks/{bank}', [App\Http\Controllers\BankController::class, 'destroy'])->name('banks.destroy');
 });
