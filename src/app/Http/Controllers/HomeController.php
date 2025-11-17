@@ -37,6 +37,29 @@ class HomeController extends Controller
     }
 
     /**
+     * Get available months for a given bank and year
+     */
+    public function getAvailableMonths(Request $request): JsonResponse
+    {
+        $request->validate([
+            'bank' => 'required|string',
+            'year' => 'required|integer',
+        ]);
+
+        $months = Transaction::where('bank_name', $request->bank)
+            ->where('year', $request->year)
+            ->select('month')
+            ->distinct()
+            ->orderBy('month')
+            ->pluck('month');
+
+        return response()->json([
+            'success' => true,
+            'months' => $months,
+        ]);
+    }
+
+    /**
      * Get transactions filtered by bank, year, and month.
      */
     public function getTransactions(Request $request): JsonResponse

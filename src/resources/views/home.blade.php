@@ -30,20 +30,8 @@
                         </div>
                         <div class="col-md-3">
                             <label for="monthFilter" class="form-label">Month</label>
-                            <select class="form-select" id="monthFilter">
-                                <option value="">Select Month</option>
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6">June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
+                            <select class="form-select" id="monthFilter" disabled>
+                                <option value="">Select Bank & Year first</option>
                             </select>
                         </div>
                         <div class="col-md-3 d-flex align-items-end gap-2">
@@ -593,8 +581,9 @@
     // Refresh year and month dropdowns after import
     async function refreshYearMonthDropdowns() {
         try {
-            // We need to create an endpoint to get available years and months
-            // For now, just show a message that new data is available
+            // Update the month dropdown if bank and year are selected
+            await updateMonthDropdown();
+            
             const alert = document.createElement('div');
             alert.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
             alert.style.zIndex = '9999';
@@ -608,6 +597,66 @@
             console.error('Failed to refresh year/month dropdowns:', error);
         }
     }
+
+    // Month names for display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+
+    // Update month dropdown when bank or year changes
+    async function updateMonthDropdown() {
+        const bank = bankFilter.value;
+        const year = yearFilter.value;
+
+        if (!bank || !year) {
+            // Reset to all months if bank or year not selected
+            monthFilter.innerHTML = `
+                <option value="">Select Month</option>
+                ${monthNames.map((name, idx) => `<option value="${idx + 1}">${name}</option>`).join('')}
+            `;
+            monthFilter.disabled = !bank || !year;
+            return;
+        }
+
+        try {
+            const response = await fetch('{{ route('transactions.available-months') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ bank, year })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const currentSelection = monthFilter.value;
+                monthFilter.innerHTML = '<option value="">Select Month</option>';
+                
+                if (data.months.length === 0) {
+                    monthFilter.innerHTML += '<option disabled>No data available</option>';
+                    monthFilter.disabled = true;
+                } else {
+                    data.months.forEach(month => {
+                        const option = document.createElement('option');
+                        option.value = month;
+                        option.textContent = monthNames[month - 1];
+                        if (month == currentSelection) {
+                            option.selected = true;
+                        }
+                        monthFilter.appendChild(option);
+                    });
+                    monthFilter.disabled = false;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load available months:', error);
+        }
+    }
+
+    // Listen for bank and year changes
+    bankFilter.addEventListener('change', updateMonthDropdown);
+    yearFilter.addEventListener('change', updateMonthDropdown);
 
     // Load transactions
     loadBtn.addEventListener('click', async () => {
