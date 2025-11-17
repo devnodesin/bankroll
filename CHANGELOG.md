@@ -57,3 +57,43 @@ All notable changes to the Bankroll project will be documented in this file.
 - All Bootstrap 5.3 components styled correctly
 - Theme automatically applies on page load
 - System theme change detection when in auto mode
+
+### Added - GH-005: Home Page Structure and Filters
+
+- Created HomeController with index and filtering methods
+- Implemented filter section with three dropdowns:
+  - Bank dropdown (dynamically populated from transaction data)
+  - Year dropdown (dynamically populated, descending order)
+  - Month dropdown (January through December)
+- Added "Load Transactions" button to trigger AJAX data fetch
+- Implemented loading spinner during data fetch
+- Display "No Data Available" message when no transactions match filters
+- AJAX endpoint returns filtered transactions based on bank, year, month
+- Proper validation of filter parameters on backend
+- Created sample transaction data seeder for testing
+
+### Added - GH-006: Transactions Table Display
+
+- Created responsive transactions table with Bootstrap styling
+- Table columns: Date, Description, Category, Notes, Withdraw, Deposit, Balance
+- Read-only fields (Date, Description, Withdraw, Deposit, Balance):
+  - Light gray background to indicate read-only status
+  - Proper currency formatting ($1,234.56)
+  - Date formatting (Jan 15, 2024)
+- Editable classification fields:
+  - Category dropdown with all available categories
+  - Notes text input with placeholder
+  - Auto-save functionality on change (1-second debounce for notes)
+- AJAX update endpoint for transaction classification
+- Only category_id and notes can be updated (original bank data protected)
+- Transactions sorted by date (newest first)
+- Smooth UI updates without page reload
+
+### Added - GH-007, GH-008, GH-009: Additional Features Setup
+
+- Installed Laravel Excel package (maatwebsite/excel) for import/export
+- Installed DomPDF package (barryvdh/laravel-dompdf) for PDF exports
+- Packages ready for implementing:
+  - Import transactions from XLS/CSV files
+  - Export transactions to Excel, CSV, and PDF formats
+  - Category management interface

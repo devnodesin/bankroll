@@ -10,7 +10,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 
 // Protected routes
 Route::middleware('auth')->group(function () {
-    Route::get('/', function () {
-        return view('home');
-    })->name('home');
+    Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::post('/transactions/get', [App\Http\Controllers\HomeController::class, 'getTransactions'])->name('transactions.get');
+    Route::patch('/transactions/{transaction}', [App\Http\Controllers\HomeController::class, 'updateTransaction'])->name('transactions.update');
 });
