@@ -85,9 +85,19 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">Transactions</h5>
-                        <button type="button" class="btn btn-success" id="saveChanges" style="display: none;">
-                            <i class="bi bi-save"></i> Save Changes
-                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success" id="saveChanges" style="display: none;">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-info dropdown-toggle ms-2" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="display: none;">
+                                <i class="bi bi-download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="#" id="exportExcel"><i class="bi bi-file-earmark-excel"></i> Export as Excel</a></li>
+                                <li><a class="dropdown-item" href="#" id="exportCsv"><i class="bi bi-file-earmark-text"></i> Export as CSV</a></li>
+                                <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf"></i> Export as PDF</a></li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
@@ -163,11 +173,16 @@
     const transactionsSection = document.getElementById('transactionsSection');
     const transactionsTableBody = document.getElementById('transactionsTableBody');
     const saveChangesBtn = document.getElementById('saveChanges');
+    const exportDropdown = document.getElementById('exportDropdown');
+    const exportExcel = document.getElementById('exportExcel');
+    const exportCsv = document.getElementById('exportCsv');
+    const exportPdf = document.getElementById('exportPdf');
 
     const categories = @json($categories);
     
     // Track pending changes
     let pendingChanges = {};
+    let currentFilters = { bank: '', year: '', month: '' };
 
     // Load transactions
     loadBtn.addEventListener('click', async () => {
@@ -199,8 +214,11 @@
             loadingSpinner.classList.add('d-none');
 
             if (data.success && data.transactions.length > 0) {
+                currentFilters = { bank, year, month };
                 displayTransactions(data.transactions);
+                exportDropdown.style.display = 'block';
             } else {
+                exportDropdown.style.display = 'none';
                 noDataMessage.classList.remove('d-none');
             }
         } catch (error) {
@@ -418,6 +436,34 @@
         importForm.reset();
         importErrors.classList.add('d-none');
         importSuccess.classList.add('d-none');
+    });
+
+    // Export handlers
+    exportExcel.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = new URL('{{ route('transactions.export.excel') }}', window.location.origin);
+        url.searchParams.append('bank', currentFilters.bank);
+        url.searchParams.append('year', currentFilters.year);
+        url.searchParams.append('month', currentFilters.month);
+        window.location.href = url.toString();
+    });
+
+    exportCsv.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = new URL('{{ route('transactions.export.csv') }}', window.location.origin);
+        url.searchParams.append('bank', currentFilters.bank);
+        url.searchParams.append('year', currentFilters.year);
+        url.searchParams.append('month', currentFilters.month);
+        window.location.href = url.toString();
+    });
+
+    exportPdf.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = new URL('{{ route('transactions.export.pdf') }}', window.location.origin);
+        url.searchParams.append('bank', currentFilters.bank);
+        url.searchParams.append('year', currentFilters.year);
+        url.searchParams.append('month', currentFilters.month);
+        window.location.href = url.toString();
     });
 </script>
 @endpush

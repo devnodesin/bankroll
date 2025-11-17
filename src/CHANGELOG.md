@@ -4,6 +4,18 @@
 
 ### Added - 2025-11-17
 
+#### GH-008: Export Transactions Feature
+- Added ExportController with Excel, CSV, and PDF export methods
+- Created TransactionsExport class for Excel/CSV formatting
+- Styled Excel exports with bold headers, borders, and auto-sizing
+- PDF export with landscape orientation and professional formatting
+- Export dropdown UI in transactions table header
+- Only enabled when transactions are displayed
+- Filename format: transactions_{bank}_{year}_{month}.{ext}
+- Respects current filter selections (bank/year/month)
+- Currency formatting in all export formats
+- Category names included in exports
+
 #### GH-007: Import Transactions Feature
 - Added ImportController to handle file uploads and transaction imports
 - Support for XLS, XLSX, and CSV file formats (max 5MB)

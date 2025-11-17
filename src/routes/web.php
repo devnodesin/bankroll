@@ -14,4 +14,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/transactions/get', [App\Http\Controllers\HomeController::class, 'getTransactions'])->name('transactions.get');
     Route::patch('/transactions/{transaction}', [App\Http\Controllers\HomeController::class, 'updateTransaction'])->name('transactions.update');
     Route::post('/transactions/import', [App\Http\Controllers\ImportController::class, 'import'])->name('transactions.import');
+    Route::get('/transactions/export/excel', [App\Http\Controllers\ExportController::class, 'exportExcel'])->name('transactions.export.excel');
+    Route::get('/transactions/export/csv', [App\Http\Controllers\ExportController::class, 'exportCsv'])->name('transactions.export.csv');
+    Route::get('/transactions/export/pdf', [App\Http\Controllers\ExportController::class, 'exportPdf'])->name('transactions.export.pdf');
 });
