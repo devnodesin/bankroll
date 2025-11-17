@@ -4,6 +4,16 @@
         
         <div class="d-flex align-items-center gap-2">
             @auth
+                <!-- Import Button -->
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="bi bi-upload"></i> Import
+                </button>
+                
+                <!-- Manage Banks Button -->
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#banksModal">
+                    <i class="bi bi-bank"></i> Banks
+                </button>
+                
                 <!-- Manage Categories Button -->
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#categoriesModal">
                     <i class="bi bi-tags"></i> Categories

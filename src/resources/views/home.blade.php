@@ -32,15 +32,9 @@
                                 <option value="">Select Bank & Year first</option>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end gap-2">
-                            <button type="button" class="btn btn-primary flex-grow-1" id="loadTransactions">
-                                <i class="bi bi-search"></i> Load
-                            </button>
-                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#banksModal">
-                                <i class="bi bi-bank"></i>
-                            </button>
-                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
-                                <i class="bi bi-upload"></i> Import
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary w-100" id="loadTransactions">
+                                <i class="bi bi-search"></i> Load Transactions
                             </button>
                         </div>
                     </div>
