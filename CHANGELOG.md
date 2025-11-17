@@ -24,3 +24,18 @@ All notable changes to the Bankroll project will be documented in this file.
 - All original bank data fields are guarded (read-only)
 - Created CategorySeeder with predefined categories: INCOME:SALES, EXPENSE:FUEL, EXPENSE:ELECTRIC BILL, EXPENSE:TRAVEL, EXPENSE:HEALTHCARE, EXPENSE:ENTERTAINMENT
 - Successfully migrated database and seeded categories
+
+### Added - GH-003: Authentication System
+
+- Created LoginController with login/logout functionality
+- Implemented simple username/password login page with Bootstrap 5.3 styling
+- Added authentication routes (login GET/POST, logout POST)
+- Protected all routes except login with auth middleware
+- Redirect authenticated users away from login page
+- Created user management Artisan commands:
+  - `user:add {username} {email} {password}` - Add new user
+  - `user:remove {email}` - Remove user by email
+  - `user:list` - List all users
+- Created default admin user (admin@bankroll.local / password123)
+- Session regeneration on login for security
+- CSRF protection on all forms
