@@ -122,6 +122,53 @@
         </div>
     </div>
 
+    <!-- Categories Management Modal -->
+    <div class="modal fade" id="categoriesModal" tabindex="-1" aria-labelledby="categoriesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoriesModalLabel">Manage Categories</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Add Category Form -->
+                    <form id="addCategoryForm" class="mb-4">
+                        @csrf
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="categoryName" name="name" placeholder="Enter new category name" required maxlength="50">
+                            <button type="submit" class="btn btn-primary" id="addCategoryBtn">
+                                <i class="bi bi-plus-circle"></i> Add Category
+                            </button>
+                        </div>
+                        <div id="categoryErrors" class="alert alert-danger mt-2 d-none"></div>
+                        <div id="categorySuccess" class="alert alert-success mt-2 d-none"></div>
+                    </form>
+
+                    <!-- System Categories -->
+                    <div class="mb-4">
+                        <h6 class="text-muted">System Categories</h6>
+                        <div class="list-group" id="systemCategoriesList">
+                            <div class="text-center py-3">
+                                <span class="spinner-border spinner-border-sm"></span> Loading...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Categories -->
+                    <div>
+                        <h6 class="text-muted">Custom Categories</h6>
+                        <div class="list-group" id="customCategoriesList">
+                            <div class="text-center py-3 text-muted">No custom categories yet</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Import Modal -->
     <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -164,6 +211,16 @@
 @push('scripts')
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    
+    // Categories modal elements
+    const categoriesModal = document.getElementById('categoriesModal');
+    const addCategoryForm = document.getElementById('addCategoryForm');
+    const categoryName = document.getElementById('categoryName');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const categoryErrors = document.getElementById('categoryErrors');
+    const categorySuccess = document.getElementById('categorySuccess');
+    const systemCategoriesList = document.getElementById('systemCategoriesList');
+    const customCategoriesList = document.getElementById('customCategoriesList');
     const loadBtn = document.getElementById('loadTransactions');
     const bankFilter = document.getElementById('bankFilter');
     const yearFilter = document.getElementById('yearFilter');
@@ -178,11 +235,152 @@
     const exportCsv = document.getElementById('exportCsv');
     const exportPdf = document.getElementById('exportPdf');
 
-    const categories = @json($categories);
+    let categories = @json($categories);
     
     // Track pending changes
     let pendingChanges = {};
     let currentFilters = { bank: '', year: '', month: '' };
+
+    // Load categories when modal is opened
+    categoriesModal.addEventListener('show.bs.modal', loadCategories);
+
+    async function loadCategories() {
+        try {
+            const response = await fetch('{{ route('categories.index') }}', {
+                headers: { 'X-CSRF-TOKEN': csrfToken }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                displayCategories(data.system, data.custom);
+            }
+        } catch (error) {
+            systemCategoriesList.innerHTML = '<div class="text-center py-3 text-danger">Failed to load categories</div>';
+        }
+    }
+
+    function displayCategories(system, custom) {
+        // Display system categories
+        if (system.length > 0) {
+            systemCategoriesList.innerHTML = system.map(cat => `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-shield-check text-primary me-2"></i>
+                        <strong>${cat.name}</strong>
+                    </div>
+                    <span class="badge bg-primary">System</span>
+                </div>
+            `).join('');
+        } else {
+            systemCategoriesList.innerHTML = '<div class="text-center py-3 text-muted">No system categories</div>';
+        }
+
+        // Display custom categories
+        if (custom.length > 0) {
+            customCategoriesList.innerHTML = custom.map(cat => `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-tag text-success me-2"></i>
+                        ${cat.name}
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${cat.id}, '${cat.name}')">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            `).join('');
+        } else {
+            customCategoriesList.innerHTML = '<div class="text-center py-3 text-muted">No custom categories yet</div>';
+        }
+    }
+
+    // Add category form submission
+    addCategoryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        categoryErrors.classList.add('d-none');
+        categorySuccess.classList.add('d-none');
+        addCategoryBtn.disabled = true;
+
+        try {
+            const response = await fetch('{{ route('categories.store') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ name: categoryName.value })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                categorySuccess.textContent = data.message;
+                categorySuccess.classList.remove('d-none');
+                categoryName.value = '';
+                
+                // Refresh categories
+                await loadCategories();
+                await refreshCategoriesDropdown();
+            } else {
+                categoryErrors.textContent = data.message || 'Failed to add category';
+                categoryErrors.classList.remove('d-none');
+            }
+        } catch (error) {
+            categoryErrors.textContent = 'Error: ' + error.message;
+            categoryErrors.classList.remove('d-none');
+        } finally {
+            addCategoryBtn.disabled = false;
+        }
+    });
+
+    // Delete category function
+    window.deleteCategory = async function(id, name) {
+        if (!confirm(`Are you sure you want to delete the category "${name}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/categories/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                categorySuccess.textContent = data.message;
+                categorySuccess.classList.remove('d-none');
+                
+                // Refresh categories
+                await loadCategories();
+                await refreshCategoriesDropdown();
+
+                setTimeout(() => categorySuccess.classList.add('d-none'), 3000);
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            alert('Error deleting category: ' + error.message);
+        }
+    };
+
+    // Refresh categories dropdown in transaction table
+    async function refreshCategoriesDropdown() {
+        try {
+            const response = await fetch('{{ route('categories.all') }}', {
+                headers: { 'X-CSRF-TOKEN': csrfToken }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                categories = data.categories;
+            }
+        } catch (error) {
+            console.error('Failed to refresh categories:', error);
+        }
+    }
 
     // Load transactions
     loadBtn.addEventListener('click', async () => {

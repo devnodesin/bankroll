@@ -4,6 +4,19 @@
 
 ### Added - 2025-11-17
 
+#### GH-009: Category Management Feature
+- Added CategoryController with CRUD operations for categories
+- Category management modal in header navigation
+- Display system categories (non-editable) with badge
+- Display custom categories with delete functionality
+- Add new custom category with validation
+- Prevent deletion of categories in use by transactions
+- Case-insensitive uniqueness validation
+- Real-time category dropdown refresh after add/delete
+- Visual distinction between system and custom categories
+- Usage count check before deletion
+- AJAX-based operations for seamless UX
+
 #### GH-008: Export Transactions Feature
 - Added ExportController with Excel, CSV, and PDF export methods
 - Created TransactionsExport class for Excel/CSV formatting
