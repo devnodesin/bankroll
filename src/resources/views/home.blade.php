@@ -239,6 +239,9 @@
                             <div class="form-text mt-2">
                                 <strong>Required columns:</strong> Date, Description, Withdraw, Deposit, Balance
                             </div>
+                            <div class="form-text mt-1">
+                                <strong>Date format:</strong> DD/MM/YYYY (e.g., 15/03/2024)
+                            </div>
                         </div>
                         <div id="importErrors" class="alert alert-danger d-none"></div>
                         <div id="importSuccess" class="alert alert-success d-none"></div>
