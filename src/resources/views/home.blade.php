@@ -590,6 +590,25 @@
         }
     }
 
+    // Refresh year and month dropdowns after import
+    async function refreshYearMonthDropdowns() {
+        try {
+            // We need to create an endpoint to get available years and months
+            // For now, just show a message that new data is available
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                Import successful! Select bank, year, and month to view transactions.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        } catch (error) {
+            console.error('Failed to refresh year/month dropdowns:', error);
+        }
+    }
+
     // Load transactions
     loadBtn.addEventListener('click', async () => {
         const bank = bankFilter.value;
@@ -724,7 +743,13 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             document.body.appendChild(alert);
-            setTimeout(() => alert.remove(), 3000);
+            setTimeout(() => {
+                alert.remove();
+                // Refresh the transactions list to show saved changes
+                if (bankFilter.value && yearFilter.value && monthFilter.value) {
+                    loadBtn.click();
+                }
+            }, 1500);
         } else {
             alert('Some changes failed to save. Please try again.');
         }
@@ -803,9 +828,12 @@
                 importSuccess.classList.remove('d-none');
                 importForm.reset();
                 
-                setTimeout(() => {
+                setTimeout(async () => {
                     bootstrap.Modal.getInstance(importModal).hide();
                     importSuccess.classList.add('d-none');
+                    
+                    // Refresh year and month dropdowns
+                    await refreshYearMonthDropdowns();
                     
                     // Reload transactions if filters are set
                     if (bankFilter.value && yearFilter.value && monthFilter.value) {
