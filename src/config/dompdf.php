@@ -17,8 +17,9 @@ return [
 
     /*
      * Dejavu Sans font is missing glyphs for converted entities, turn it off if you need to show € and £.
+     * Set to false to properly display Unicode currency symbols like ₹, €, £, etc.
      */
-    'convert_entities' => true,
+    'convert_entities' => false,
 
     'options' => [
         /**

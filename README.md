@@ -167,7 +167,7 @@ Theme preference is saved in localStorage and persists across sessions.
 
 ## 📜 License
 
-This project is proprietary software developed by Devnodes.in.
+This project is open source software licensed under the [MIT License](LICENSE.md).
 
 ## 👨‍💻 Development
 
