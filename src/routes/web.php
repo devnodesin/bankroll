@@ -13,4 +13,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::post('/transactions/get', [App\Http\Controllers\HomeController::class, 'getTransactions'])->name('transactions.get');
     Route::patch('/transactions/{transaction}', [App\Http\Controllers\HomeController::class, 'updateTransaction'])->name('transactions.update');
+    Route::post('/transactions/import', [App\Http\Controllers\ImportController::class, 'import'])->name('transactions.import');
+    Route::get('/transactions/export/excel', [App\Http\Controllers\ExportController::class, 'exportExcel'])->name('transactions.export.excel');
+    Route::get('/transactions/export/csv', [App\Http\Controllers\ExportController::class, 'exportCsv'])->name('transactions.export.csv');
+    Route::get('/transactions/export/pdf', [App\Http\Controllers\ExportController::class, 'exportPdf'])->name('transactions.export.pdf');
+    
+    // Category management routes
+    Route::get('/categories', [App\Http\Controllers\CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categories', [App\Http\Controllers\CategoryController::class, 'store'])->name('categories.store');
+    Route::delete('/categories/{category}', [App\Http\Controllers\CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::get('/categories/all', [App\Http\Controllers\CategoryController::class, 'getAll'])->name('categories.all');
 });

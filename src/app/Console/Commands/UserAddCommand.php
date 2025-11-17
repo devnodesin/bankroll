@@ -11,14 +11,14 @@ class UserAddCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'user:add {username} {email} {password}';
+    protected $signature = 'user:add {username} {password} {--email=}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Add a new user';
+    protected $description = 'Add a new user (email is optional)';
 
     /**
      * Execute the console command.
@@ -26,8 +26,13 @@ class UserAddCommand extends Command
     public function handle()
     {
         $username = $this->argument('username');
-        $email = $this->argument('email');
         $password = $this->argument('password');
+        $email = $this->option('email');
+
+        // Generate a unique email if not provided
+        if (empty($email)) {
+            $email = $username . '@bankroll.local';
+        }
 
         $user = \App\Models\User::create([
             'name' => $username,

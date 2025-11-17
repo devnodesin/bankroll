@@ -2,9 +2,16 @@
     <div class="container-fluid">
         <span class="navbar-brand mb-0 h1">{{ config('app.name') }}</span>
         
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            @auth
+                <!-- Manage Categories Button -->
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#categoriesModal">
+                    <i class="bi bi-tags"></i> Categories
+                </button>
+            @endauth
+            
             <!-- Theme Switcher Button -->
-            <button class="btn btn-outline-secondary me-2" id="theme-toggle" type="button" title="Toggle theme">
+            <button class="btn btn-outline-secondary" id="theme-toggle" type="button" title="Toggle theme">
                 <i class="bi bi-sun-fill" id="theme-icon"></i>
             </button>
             

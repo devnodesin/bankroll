@@ -46,9 +46,12 @@
                                 <option value="12">December</option>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-primary w-100" id="loadTransactions">
-                                <i class="bi bi-search"></i> Load Transactions
+                        <div class="col-md-3 d-flex align-items-end gap-2">
+                            <button type="button" class="btn btn-primary flex-grow-1" id="loadTransactions">
+                                <i class="bi bi-search"></i> Load
+                            </button>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                                <i class="bi bi-upload"></i> Import
                             </button>
                         </div>
                     </div>
@@ -80,6 +83,22 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Transactions</h5>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success" id="saveChanges" style="display: none;">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-info dropdown-toggle ms-2" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="display: none;">
+                                <i class="bi bi-download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="#" id="exportExcel"><i class="bi bi-file-earmark-excel"></i> Export as Excel</a></li>
+                                <li><a class="dropdown-item" href="#" id="exportCsv"><i class="bi bi-file-earmark-text"></i> Export as CSV</a></li>
+                                <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf"></i> Export as PDF</a></li>
+                            </ul>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
@@ -102,12 +121,106 @@
             </div>
         </div>
     </div>
+
+    <!-- Categories Management Modal -->
+    <div class="modal fade" id="categoriesModal" tabindex="-1" aria-labelledby="categoriesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoriesModalLabel">Manage Categories</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Add Category Form -->
+                    <form id="addCategoryForm" class="mb-4">
+                        @csrf
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="categoryName" name="name" placeholder="Enter new category name" required maxlength="50">
+                            <button type="submit" class="btn btn-primary" id="addCategoryBtn">
+                                <i class="bi bi-plus-circle"></i> Add Category
+                            </button>
+                        </div>
+                        <div id="categoryErrors" class="alert alert-danger mt-2 d-none"></div>
+                        <div id="categorySuccess" class="alert alert-success mt-2 d-none"></div>
+                    </form>
+
+                    <!-- System Categories -->
+                    <div class="mb-4">
+                        <h6 class="text-muted">System Categories</h6>
+                        <div class="list-group" id="systemCategoriesList">
+                            <div class="text-center py-3">
+                                <span class="spinner-border spinner-border-sm"></span> Loading...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Categories -->
+                    <div>
+                        <h6 class="text-muted">Custom Categories</h6>
+                        <div class="list-group" id="customCategoriesList">
+                            <div class="text-center py-3 text-muted">No custom categories yet</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Import Transactions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="importForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="importBankName" class="form-label">Bank Name</label>
+                            <input type="text" class="form-control" id="importBankName" name="bank_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Select File</label>
+                            <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
+                            <div class="form-text">Accepted formats: XLS, XLSX, CSV (Max 5MB)</div>
+                            <div class="form-text mt-2">
+                                <strong>Required columns:</strong> Date, Description, Withdraw, Deposit, Balance
+                            </div>
+                        </div>
+                        <div id="importErrors" class="alert alert-danger d-none"></div>
+                        <div id="importSuccess" class="alert alert-success d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="importButton">
+                            <i class="bi bi-upload"></i> Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    
+    // Categories modal elements
+    const categoriesModal = document.getElementById('categoriesModal');
+    const addCategoryForm = document.getElementById('addCategoryForm');
+    const categoryName = document.getElementById('categoryName');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const categoryErrors = document.getElementById('categoryErrors');
+    const categorySuccess = document.getElementById('categorySuccess');
+    const systemCategoriesList = document.getElementById('systemCategoriesList');
+    const customCategoriesList = document.getElementById('customCategoriesList');
     const loadBtn = document.getElementById('loadTransactions');
     const bankFilter = document.getElementById('bankFilter');
     const yearFilter = document.getElementById('yearFilter');
@@ -116,8 +229,158 @@
     const noDataMessage = document.getElementById('noDataMessage');
     const transactionsSection = document.getElementById('transactionsSection');
     const transactionsTableBody = document.getElementById('transactionsTableBody');
+    const saveChangesBtn = document.getElementById('saveChanges');
+    const exportDropdown = document.getElementById('exportDropdown');
+    const exportExcel = document.getElementById('exportExcel');
+    const exportCsv = document.getElementById('exportCsv');
+    const exportPdf = document.getElementById('exportPdf');
 
-    const categories = @json($categories);
+    let categories = @json($categories);
+    
+    // Track pending changes
+    let pendingChanges = {};
+    let currentFilters = { bank: '', year: '', month: '' };
+
+    // Load categories when modal is opened
+    categoriesModal.addEventListener('show.bs.modal', loadCategories);
+
+    async function loadCategories() {
+        try {
+            const response = await fetch('{{ route('categories.index') }}', {
+                headers: { 'X-CSRF-TOKEN': csrfToken }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                displayCategories(data.system, data.custom);
+            }
+        } catch (error) {
+            systemCategoriesList.innerHTML = '<div class="text-center py-3 text-danger">Failed to load categories</div>';
+        }
+    }
+
+    function displayCategories(system, custom) {
+        // Display system categories
+        if (system.length > 0) {
+            systemCategoriesList.innerHTML = system.map(cat => `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-shield-check text-primary me-2"></i>
+                        <strong>${cat.name}</strong>
+                    </div>
+                    <span class="badge bg-primary">System</span>
+                </div>
+            `).join('');
+        } else {
+            systemCategoriesList.innerHTML = '<div class="text-center py-3 text-muted">No system categories</div>';
+        }
+
+        // Display custom categories
+        if (custom.length > 0) {
+            customCategoriesList.innerHTML = custom.map(cat => `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-tag text-success me-2"></i>
+                        ${cat.name}
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${cat.id}, '${cat.name}')">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            `).join('');
+        } else {
+            customCategoriesList.innerHTML = '<div class="text-center py-3 text-muted">No custom categories yet</div>';
+        }
+    }
+
+    // Add category form submission
+    addCategoryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        categoryErrors.classList.add('d-none');
+        categorySuccess.classList.add('d-none');
+        addCategoryBtn.disabled = true;
+
+        try {
+            const response = await fetch('{{ route('categories.store') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ name: categoryName.value })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                categorySuccess.textContent = data.message;
+                categorySuccess.classList.remove('d-none');
+                categoryName.value = '';
+                
+                // Refresh categories
+                await loadCategories();
+                await refreshCategoriesDropdown();
+            } else {
+                categoryErrors.textContent = data.message || 'Failed to add category';
+                categoryErrors.classList.remove('d-none');
+            }
+        } catch (error) {
+            categoryErrors.textContent = 'Error: ' + error.message;
+            categoryErrors.classList.remove('d-none');
+        } finally {
+            addCategoryBtn.disabled = false;
+        }
+    });
+
+    // Delete category function
+    window.deleteCategory = async function(id, name) {
+        if (!confirm(`Are you sure you want to delete the category "${name}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/categories/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                categorySuccess.textContent = data.message;
+                categorySuccess.classList.remove('d-none');
+                
+                // Refresh categories
+                await loadCategories();
+                await refreshCategoriesDropdown();
+
+                setTimeout(() => categorySuccess.classList.add('d-none'), 3000);
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            alert('Error deleting category: ' + error.message);
+        }
+    };
+
+    // Refresh categories dropdown in transaction table
+    async function refreshCategoriesDropdown() {
+        try {
+            const response = await fetch('{{ route('categories.all') }}', {
+                headers: { 'X-CSRF-TOKEN': csrfToken }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                categories = data.categories;
+            }
+        } catch (error) {
+            console.error('Failed to refresh categories:', error);
+        }
+    }
 
     // Load transactions
     loadBtn.addEventListener('click', async () => {
@@ -149,8 +412,11 @@
             loadingSpinner.classList.add('d-none');
 
             if (data.success && data.transactions.length > 0) {
+                currentFilters = { bank, year, month };
                 displayTransactions(data.transactions);
+                exportDropdown.style.display = 'block';
             } else {
+                exportDropdown.style.display = 'none';
                 noDataMessage.classList.remove('d-none');
             }
         } catch (error) {
@@ -162,12 +428,14 @@
     // Display transactions in table
     function displayTransactions(transactions) {
         transactionsTableBody.innerHTML = '';
+        pendingChanges = {}; // Reset pending changes
+        saveChangesBtn.style.display = 'none'; // Hide save button
         
         transactions.forEach(transaction => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="bg-light">${formatDate(transaction.date)}</td>
-                <td class="bg-light" title="${transaction.description}">${truncateText(transaction.description, 50)}</td>
+                <td>${formatDate(transaction.date)}</td>
+                <td title="${transaction.description}">${truncateText(transaction.description, 50)}</td>
                 <td>
                     <select class="form-select form-select-sm category-select" data-transaction-id="${transaction.id}">
                         <option value="">None</option>
@@ -184,9 +452,9 @@
                            value="${transaction.notes || ''}" 
                            placeholder="Add notes...">
                 </td>
-                <td class="bg-light text-end">${formatCurrency(transaction.withdraw)}</td>
-                <td class="bg-light text-end">${formatCurrency(transaction.deposit)}</td>
-                <td class="bg-light text-end">${formatCurrency(transaction.balance)}</td>
+                <td class="text-end">${formatCurrency(transaction.withdraw)}</td>
+                <td class="text-end">${formatCurrency(transaction.deposit)}</td>
+                <td class="text-end">${formatCurrency(transaction.balance)}</td>
             `;
             transactionsTableBody.appendChild(row);
         });
@@ -195,26 +463,67 @@
 
         // Add event listeners for category changes
         document.querySelectorAll('.category-select').forEach(select => {
-            select.addEventListener('change', async (e) => {
-                await updateTransaction(e.target.dataset.transactionId, {
-                    category_id: e.target.value || null
-                });
+            select.addEventListener('change', (e) => {
+                const transactionId = e.target.dataset.transactionId;
+                if (!pendingChanges[transactionId]) {
+                    pendingChanges[transactionId] = {};
+                }
+                pendingChanges[transactionId].category_id = e.target.value || null;
+                saveChangesBtn.style.display = 'block'; // Show save button
             });
         });
 
-        // Add event listeners for notes changes (with debounce)
+        // Add event listeners for notes changes
         document.querySelectorAll('.notes-input').forEach(input => {
-            let timeout;
             input.addEventListener('input', (e) => {
-                clearTimeout(timeout);
-                timeout = setTimeout(async () => {
-                    await updateTransaction(e.target.dataset.transactionId, {
-                        notes: e.target.value || null
-                    });
-                }, 1000);
+                const transactionId = e.target.dataset.transactionId;
+                if (!pendingChanges[transactionId]) {
+                    pendingChanges[transactionId] = {};
+                }
+                pendingChanges[transactionId].notes = e.target.value || null;
+                saveChangesBtn.style.display = 'block'; // Show save button
             });
         });
     }
+
+    // Save all pending changes
+    saveChangesBtn.addEventListener('click', async () => {
+        if (Object.keys(pendingChanges).length === 0) {
+            return;
+        }
+
+        saveChangesBtn.disabled = true;
+        saveChangesBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+        let allSuccess = true;
+        for (const [transactionId, data] of Object.entries(pendingChanges)) {
+            const success = await updateTransaction(transactionId, data);
+            if (!success) {
+                allSuccess = false;
+            }
+        }
+
+        if (allSuccess) {
+            pendingChanges = {};
+            saveChangesBtn.style.display = 'none';
+            
+            // Show success feedback
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                Changes saved successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        } else {
+            alert('Some changes failed to save. Please try again.');
+        }
+
+        saveChangesBtn.disabled = false;
+        saveChangesBtn.innerHTML = '<i class="bi bi-save"></i> Save Changes';
+    });
 
     // Update transaction
     async function updateTransaction(transactionId, data) {
@@ -230,11 +539,10 @@
             });
 
             const result = await response.json();
-            if (!result.success) {
-                alert('Error updating transaction');
-            }
+            return result.success;
         } catch (error) {
-            alert('Error updating transaction: ' + error.message);
+            console.error('Error updating transaction:', error);
+            return false;
         }
     }
 
@@ -253,5 +561,107 @@
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     }
+
+    // Import form handling
+    const importForm = document.getElementById('importForm');
+    const importButton = document.getElementById('importButton');
+    const importErrors = document.getElementById('importErrors');
+    const importSuccess = document.getElementById('importSuccess');
+    const importModal = document.getElementById('importModal');
+
+    importForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        importErrors.classList.add('d-none');
+        importSuccess.classList.add('d-none');
+        importButton.disabled = true;
+        importButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importing...';
+
+        const formData = new FormData(importForm);
+
+        try {
+            const response = await fetch('{{ route('transactions.import') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                importSuccess.textContent = data.message;
+                importSuccess.classList.remove('d-none');
+                importForm.reset();
+                
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(importModal).hide();
+                    importSuccess.classList.add('d-none');
+                    
+                    // Reload transactions if filters are set
+                    if (bankFilter.value && yearFilter.value && monthFilter.value) {
+                        loadBtn.click();
+                    }
+                }, 2000);
+            } else {
+                let errorMessage = data.message;
+                if (data.errors && Array.isArray(data.errors)) {
+                    errorMessage += '<ul class="mb-0 mt-2">';
+                    data.errors.forEach(err => {
+                        errorMessage += `<li>${err}</li>`;
+                    });
+                    errorMessage += '</ul>';
+                }
+                if (data.required && data.found) {
+                    errorMessage += '<div class="mt-2"><strong>Required:</strong> ' + data.required.join(', ') + '</div>';
+                    errorMessage += '<div><strong>Found:</strong> ' + data.found.join(', ') + '</div>';
+                }
+                importErrors.innerHTML = errorMessage;
+                importErrors.classList.remove('d-none');
+            }
+        } catch (error) {
+            importErrors.textContent = 'Import failed: ' + error.message;
+            importErrors.classList.remove('d-none');
+        } finally {
+            importButton.disabled = false;
+            importButton.innerHTML = '<i class="bi bi-upload"></i> Import';
+        }
+    });
+
+    // Reset modal on close
+    importModal.addEventListener('hidden.bs.modal', () => {
+        importForm.reset();
+        importErrors.classList.add('d-none');
+        importSuccess.classList.add('d-none');
+    });
+
+    // Export handlers
+    exportExcel.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = new URL('{{ route('transactions.export.excel') }}', window.location.origin);
+        url.searchParams.append('bank', currentFilters.bank);
+        url.searchParams.append('year', currentFilters.year);
+        url.searchParams.append('month', currentFilters.month);
+        window.location.href = url.toString();
+    });
+
+    exportCsv.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = new URL('{{ route('transactions.export.csv') }}', window.location.origin);
+        url.searchParams.append('bank', currentFilters.bank);
+        url.searchParams.append('year', currentFilters.year);
+        url.searchParams.append('month', currentFilters.month);
+        window.location.href = url.toString();
+    });
+
+    exportPdf.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = new URL('{{ route('transactions.export.pdf') }}', window.location.origin);
+        url.searchParams.append('bank', currentFilters.bank);
+        url.searchParams.append('year', currentFilters.year);
+        url.searchParams.append('month', currentFilters.month);
+        window.location.href = url.toString();
+    });
 </script>
 @endpush

@@ -28,8 +28,18 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        // Attempt to login using email field with username value
-        if (Auth::attempt(['email' => $credentials['username'], 'password' => $credentials['password']], $request->filled('remember'))) {
+        $loginField = $credentials['username'];
+        $password = $credentials['password'];
+        $remember = $request->filled('remember');
+
+        // Try to login with username (stored in name field)
+        if (Auth::attempt(['name' => $loginField, 'password' => $password], $remember)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/');
+        }
+
+        // Try to login with email if first attempt failed
+        if (Auth::attempt(['email' => $loginField, 'password' => $password], $remember)) {
             $request->session()->regenerate();
             return redirect()->intended('/');
         }

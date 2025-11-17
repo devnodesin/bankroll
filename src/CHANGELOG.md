@@ -2,6 +2,92 @@
 
 ## [Unreleased](https://github.com/laravel/laravel/compare/v12.10.0...12.x)
 
+### Added - 2025-11-17
+
+#### GH-010: Testing, Polish, and Documentation
+- Created comprehensive user guide in docs/user-guide.md
+  - Getting started instructions
+  - Step-by-step feature tutorials
+  - Troubleshooting section
+  - Tips for best experience
+- Created architecture documentation in docs/architecture.md
+  - System overview and components
+  - Database schema details
+  - Security measures
+  - API endpoints reference
+  - Deployment considerations
+- Updated README.md with complete project information
+  - Feature overview with icons
+  - Quick start guide
+  - Console commands reference
+  - File format requirements
+  - Usage flow diagram
+  - Technology stack details
+- Improved UI/UX consistency
+  - Bootstrap 5.3 styling throughout
+  - Theme switching works in all components
+  - Responsive design verified
+  - Loading states added
+  - Clear user feedback messages
+- Enhanced error handling
+  - Detailed validation messages
+  - User-friendly error display
+  - Network error handling
+  - File upload error feedback
+- Performance optimizations
+  - Database indexes on commonly queried fields
+  - AJAX calls optimized
+  - Batch operations for updates
+  - Efficient file processing
+- Security review completed
+  - CSRF protection on all forms
+  - Input validation on backend
+  - File upload security
+  - Session management
+  - Password hashing
+- Production-ready setup
+  - Environment configuration
+  - Deployment instructions
+  - User management commands
+  - Database seeding
+
+#### GH-009: Category Management Feature
+- Added CategoryController with CRUD operations for categories
+- Category management modal in header navigation
+- Display system categories (non-editable) with badge
+- Display custom categories with delete functionality
+- Add new custom category with validation
+- Prevent deletion of categories in use by transactions
+- Case-insensitive uniqueness validation
+- Real-time category dropdown refresh after add/delete
+- Visual distinction between system and custom categories
+- Usage count check before deletion
+- AJAX-based operations for seamless UX
+
+#### GH-008: Export Transactions Feature
+- Added ExportController with Excel, CSV, and PDF export methods
+- Created TransactionsExport class for Excel/CSV formatting
+- Styled Excel exports with bold headers, borders, and auto-sizing
+- PDF export with landscape orientation and professional formatting
+- Export dropdown UI in transactions table header
+- Only enabled when transactions are displayed
+- Filename format: transactions_{bank}_{year}_{month}.{ext}
+- Respects current filter selections (bank/year/month)
+- Currency formatting in all export formats
+- Category names included in exports
+
+#### GH-007: Import Transactions Feature
+- Added ImportController to handle file uploads and transaction imports
+- Support for XLS, XLSX, and CSV file formats (max 5MB)
+- Strict column validation (Date, Description, Withdraw, Deposit, Balance)
+- Comprehensive data validation with clear error messages
+- Database transaction wrapping for atomic imports
+- Import modal UI with file upload and bank name input
+- Auto-refresh transaction list after successful import
+- Row-level error reporting for validation failures
+- Support for multiple date formats and Excel date numbers
+- Smart parsing of currency values (removes symbols and commas)
+
 ## [v12.10.0](https://github.com/laravel/laravel/compare/v12.9.1...v12.10.0) - 2025-11-04
 
 * Add background driver by [@barryvdh](https://github.com/barryvdh) in https://github.com/laravel/laravel/pull/6699

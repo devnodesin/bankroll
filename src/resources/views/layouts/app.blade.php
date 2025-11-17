@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,8 +39,8 @@
             auto: 'bi-circle-half'
         };
         
-        // Get saved theme or default to light
-        let currentTheme = localStorage.getItem('theme') || 'light';
+        // Get saved theme or default to dark
+        let currentTheme = localStorage.getItem('theme') || 'dark';
         
         // Apply theme on page load
         function applyTheme(theme) {
