@@ -82,7 +82,11 @@ class ExportController extends Controller
             'year' => $request->year,
         ]);
 
-        $pdf->setPaper('a4', 'landscape');
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOption('margin-top', '0.2mm');
+        $pdf->setOption('margin-bottom', '0.2mm');
+        $pdf->setOption('margin-left', '0.2mm');
+        $pdf->setOption('margin-right', '0.2mm');
 
         $filename = $this->generateFilename($request->bank, $request->year, $request->month, 'pdf');
 

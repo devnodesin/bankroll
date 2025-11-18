@@ -7,29 +7,36 @@
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
+            font-size: 9px;
+            margin: 0;
+            padding: 0;
         }
         h1 {
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 18px;
+            margin: 5px 0 10px 0;
+            font-size: 14px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 5px;
+        }
+        thead {
+            display: table-header-group;
         }
         th {
             background-color: #343a40;
             color: white;
-            padding: 8px;
+            padding: 3px 4px;
             text-align: left;
             font-weight: bold;
             border: 1px solid #dee2e6;
+            font-size: 8px;
         }
         td {
-            padding: 6px;
+            padding: 2px 3px;
             border: 1px solid #dee2e6;
+            font-size: 8px;
         }
         tr:nth-child(even) {
             background-color: #f8f9fa;
@@ -42,7 +49,7 @@
             bottom: 0;
             width: 100%;
             text-align: center;
-            font-size: 10px;
+            font-size: 7px;
             color: #6c757d;
         }
         .page-number:before {
@@ -56,9 +63,9 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 12%;">Date</th>
-                <th style="width: 30%;">Description</th>
-                <th style="width: 15%;">Category</th>
+                <th style="width: 10%;">Date</th>
+                <th style="width: 32%;">Description</th>
+                <th style="width: 14%;">Category</th>
                 <th style="width: 18%;">Notes</th>
                 <th style="width: 10%;" class="text-end">Withdraw</th>
                 <th style="width: 10%;" class="text-end">Deposit</th>
@@ -68,7 +75,7 @@
         <tbody>
             @foreach($transactions as $transaction)
             <tr>
-                <td>{{ $transaction->date->format('M d, Y') }}</td>
+                <td>{{ $transaction->date->format('d/m/Y') }}</td>
                 <td>{{ $transaction->description }}</td>
                 <td>{{ $transaction->category ? $transaction->category->name : '-' }}</td>
                 <td>{{ $transaction->notes ?? '-' }}</td>
@@ -81,7 +88,7 @@
     </table>
     
     <div class="footer">
-        Page <span class="page-number"></span> | Generated on {{ now()->format('F d, Y') }}
+        Page <span class="page-number"></span> | Generated on {{ now()->format('d/m/Y') }}
     </div>
 </body>
 </html>
