@@ -1162,12 +1162,18 @@
         importButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importing...';
 
         // Get column mappings
+        const dateVal = document.getElementById('mapDate').value;
+        const descVal = document.getElementById('mapDescription').value;
+        const withdrawVal = document.getElementById('mapWithdraw').value;
+        const depositVal = document.getElementById('mapDeposit').value;
+        const balanceVal = document.getElementById('mapBalance').value;
+        
         columnMappings = {
-            date: parseInt(document.getElementById('mapDate').value) || null,
-            description: parseInt(document.getElementById('mapDescription').value) || null,
-            withdraw: parseInt(document.getElementById('mapWithdraw').value) || null,
-            deposit: parseInt(document.getElementById('mapDeposit').value) || null,
-            balance: parseInt(document.getElementById('mapBalance').value) || null,
+            date: dateVal !== '' ? parseInt(dateVal) : null,
+            description: descVal !== '' ? parseInt(descVal) : null,
+            withdraw: withdrawVal !== '' ? parseInt(withdrawVal) : null,
+            deposit: depositVal !== '' ? parseInt(depositVal) : null,
+            balance: balanceVal !== '' ? parseInt(balanceVal) : null,
         };
         
         // Validate required mappings
