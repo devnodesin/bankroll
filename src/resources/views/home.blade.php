@@ -1,5 +1,53 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+    .searchable-dropdown .dropdown-menu {
+        padding: 0.5rem;
+    }
+    
+    .searchable-dropdown .category-search {
+        margin-bottom: 0.5rem;
+    }
+    
+    .searchable-dropdown .category-search:focus {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .searchable-dropdown .category-options {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .searchable-dropdown .category-option {
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+        border: none;
+        background: transparent;
+        text-align: left;
+        width: 100%;
+        transition: background-color 0.15s ease-in-out;
+    }
+    
+    .searchable-dropdown .category-option:hover {
+        background-color: var(--bs-secondary-bg);
+    }
+    
+    .searchable-dropdown .category-option.active {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+    
+    .searchable-dropdown .category-display {
+        font-size: 0.875rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid">
     <!-- Filter Section -->
@@ -701,18 +749,38 @@
         
         transactions.forEach(transaction => {
             const row = document.createElement('tr');
+            const selectedCategory = categories.find(cat => cat.id == transaction.category_id);
+            const selectedText = selectedCategory ? selectedCategory.name : 'None';
+            
             row.innerHTML = `
                 <td>${formatDate(transaction.date)}</td>
                 <td title="${transaction.description}">${truncateText(transaction.description, 50)}</td>
                 <td>
-                    <select class="form-select form-select-sm category-select" data-transaction-id="${transaction.id}">
-                        <option value="">None</option>
-                        ${categories.map(cat => `
-                            <option value="${cat.id}" ${transaction.category_id == cat.id ? 'selected' : ''}>
-                                ${cat.name}
-                            </option>
-                        `).join('')}
-                    </select>
+                    <div class="dropdown searchable-dropdown" data-transaction-id="${transaction.id}">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100 text-start category-display" 
+                                type="button" 
+                                data-bs-toggle="dropdown" 
+                                data-bs-auto-close="outside"
+                                aria-expanded="false"
+                                data-selected-value="${transaction.category_id || ''}">
+                            ${selectedText}
+                        </button>
+                        <div class="dropdown-menu p-2" style="min-width: 250px;">
+                            <input type="text" 
+                                   class="form-control form-control-sm mb-2 category-search" 
+                                   placeholder="Search categories..." 
+                                   autocomplete="off">
+                            <div class="category-options" style="max-height: 200px; overflow-y: auto;">
+                                <button class="dropdown-item category-option" data-value="">None</button>
+                                ${categories.map(cat => `
+                                    <button class="dropdown-item category-option ${transaction.category_id == cat.id ? 'active' : ''}" 
+                                            data-value="${cat.id}">
+                                        ${cat.name}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
                 </td>
                 <td>
                     <input type="text" class="form-control form-control-sm notes-input" 
@@ -729,17 +797,8 @@
 
         transactionsSection.classList.remove('d-none');
 
-        // Add event listeners for category changes
-        document.querySelectorAll('.category-select').forEach(select => {
-            select.addEventListener('change', (e) => {
-                const transactionId = e.target.dataset.transactionId;
-                if (!pendingChanges[transactionId]) {
-                    pendingChanges[transactionId] = {};
-                }
-                pendingChanges[transactionId].category_id = e.target.value || null;
-                saveChangesBtn.style.display = 'block'; // Show save button
-            });
-        });
+        // Initialize searchable dropdowns
+        initializeSearchableDropdowns();
 
         // Add event listeners for notes changes
         document.querySelectorAll('.notes-input').forEach(input => {
@@ -750,6 +809,80 @@
                 }
                 pendingChanges[transactionId].notes = e.target.value || null;
                 saveChangesBtn.style.display = 'block'; // Show save button
+            });
+        });
+    }
+
+    // Initialize searchable dropdowns functionality
+    function initializeSearchableDropdowns() {
+        document.querySelectorAll('.searchable-dropdown').forEach(dropdown => {
+            const transactionId = dropdown.dataset.transactionId;
+            const displayBtn = dropdown.querySelector('.category-display');
+            const searchInput = dropdown.querySelector('.category-search');
+            const optionsContainer = dropdown.querySelector('.category-options');
+            const options = dropdown.querySelectorAll('.category-option');
+
+            // Handle search input
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            });
+
+            // Clear search when dropdown opens
+            dropdown.addEventListener('show.bs.dropdown', () => {
+                searchInput.value = '';
+                options.forEach(option => option.style.display = 'block');
+                searchInput.focus();
+            });
+
+            // Handle option selection
+            options.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const value = option.dataset.value;
+                    const text = option.textContent;
+
+                    // Update display
+                    displayBtn.textContent = text;
+                    displayBtn.dataset.selectedValue = value;
+
+                    // Remove active class from all options
+                    options.forEach(opt => opt.classList.remove('active'));
+                    // Add active class to selected option
+                    option.classList.add('active');
+
+                    // Track change
+                    if (!pendingChanges[transactionId]) {
+                        pendingChanges[transactionId] = {};
+                    }
+                    pendingChanges[transactionId].category_id = value || null;
+                    saveChangesBtn.style.display = 'block';
+
+                    // Close dropdown
+                    try {
+                        const bsDropdown = bootstrap.Dropdown.getInstance(displayBtn);
+                        if (bsDropdown) {
+                            bsDropdown.hide();
+                        }
+                    } catch (e) {
+                        // Fallback: manually close the dropdown
+                        dropdown.querySelector('.dropdown-menu').classList.remove('show');
+                        displayBtn.classList.remove('show');
+                        displayBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            });
+
+            // Prevent dropdown from closing when clicking search input
+            searchInput.addEventListener('click', (e) => {
+                e.stopPropagation();
             });
         });
     }
