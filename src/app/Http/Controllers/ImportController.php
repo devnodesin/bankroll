@@ -12,6 +12,91 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 class ImportController extends Controller
 {
     /**
+     * Preview file and suggest column mappings
+     */
+    public function preview(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5MB max
+        ]);
+
+        try {
+            $file = $request->file('file');
+            
+            // Load the spreadsheet
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            if (empty($rows)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The file is empty.'
+                ], 400);
+            }
+
+            // Get headers and preview rows
+            $headers = array_map('trim', $rows[0]);
+            $previewRows = array_slice($rows, 1, 3); // Get first 3 data rows
+
+            // Auto-detect column mappings
+            $mappings = $this->autoDetectColumns($headers);
+
+            return response()->json([
+                'success' => true,
+                'headers' => $headers,
+                'preview' => $previewRows,
+                'mappings' => $mappings,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Preview error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to preview file: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Auto-detect column mappings based on header names
+     */
+    private function autoDetectColumns($headers)
+    {
+        $mappings = [
+            'date' => null,
+            'description' => null,
+            'withdraw' => null,
+            'deposit' => null,
+            'balance' => null,
+        ];
+
+        $patterns = [
+            'date' => ['date', 'transaction date', 'txn date', 'posting date', 'trans date', 'value date'],
+            'description' => ['description', 'desc', 'particulars', 'details', 'narration', 'remarks', 'transaction details'],
+            'withdraw' => ['withdraw', 'withdrawal', 'debit', 'dr', 'amount debited', 'debit amount', 'paid out'],
+            'deposit' => ['deposit', 'credit', 'cr', 'amount credited', 'credit amount', 'paid in'],
+            'balance' => ['balance', 'closing balance', 'available balance', 'running balance', 'current balance'],
+        ];
+
+        foreach ($headers as $index => $header) {
+            $headerLower = strtolower(trim($header));
+            
+            foreach ($patterns as $field => $fieldPatterns) {
+                foreach ($fieldPatterns as $pattern) {
+                    if ($headerLower === $pattern || strpos($headerLower, $pattern) !== false) {
+                        if ($mappings[$field] === null) {
+                            $mappings[$field] = $index;
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $mappings;
+    }
+
+    /**
      * Import transactions from uploaded file
      */
     public function import(Request $request)
@@ -19,11 +104,13 @@ class ImportController extends Controller
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5MB max
             'bank_name' => 'required|string|max:100',
+            'column_mappings' => 'nullable|json',
         ]);
 
         try {
             $file = $request->file('file');
             $bankName = $request->bank_name;
+            $columnMappings = $request->column_mappings ? json_decode($request->column_mappings, true) : null;
             
             // Ensure bank exists in banks table
             \App\Models\Bank::firstOrCreate(['name' => $bankName]);
@@ -40,32 +127,56 @@ class ImportController extends Controller
                 ], 400);
             }
 
-            // Validate column headers (case-insensitive)
-            $headers = array_map('trim', array_map('strtolower', $rows[0]));
-            $requiredColumns = ['date', 'description', 'withdraw', 'deposit', 'balance'];
-            
-            $missingColumns = [];
-            foreach ($requiredColumns as $column) {
-                if (!in_array($column, $headers)) {
-                    $missingColumns[] = $column;
+            // Get column indexes - either from mappings or by exact match
+            if ($columnMappings) {
+                // Use provided column mappings
+                $dateIdx = $columnMappings['date'] ?? null;
+                $descIdx = $columnMappings['description'] ?? null;
+                $withdrawIdx = $columnMappings['withdraw'] ?? null;
+                $depositIdx = $columnMappings['deposit'] ?? null;
+                $balanceIdx = $columnMappings['balance'] ?? null;
+
+                // Validate that all required columns are mapped
+                $missingMappings = [];
+                if ($dateIdx === null) $missingMappings[] = 'date';
+                if ($descIdx === null) $missingMappings[] = 'description';
+                if ($balanceIdx === null) $missingMappings[] = 'balance';
+
+                if (!empty($missingMappings)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Missing required column mappings: ' . implode(', ', $missingMappings),
+                    ], 400);
                 }
-            }
+            } else {
+                // Try exact column name matching (case-insensitive) - backward compatibility
+                $headers = array_map('trim', array_map('strtolower', $rows[0]));
+                $requiredColumns = ['date', 'description', 'withdraw', 'deposit', 'balance'];
+                
+                $missingColumns = [];
+                foreach ($requiredColumns as $column) {
+                    if (!in_array($column, $headers)) {
+                        $missingColumns[] = $column;
+                    }
+                }
 
-            if (!empty($missingColumns)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Missing required columns: ' . implode(', ', $missingColumns),
-                    'required' => $requiredColumns,
-                    'found' => array_values(array_filter($rows[0], fn($v) => !empty(trim($v))))
-                ], 400);
-            }
+                if (!empty($missingColumns)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Missing required columns: ' . implode(', ', $missingColumns),
+                        'required' => $requiredColumns,
+                        'found' => array_values(array_filter($rows[0], fn($v) => !empty(trim($v)))),
+                        'needs_mapping' => true, // Signal that column mapping is needed
+                    ], 400);
+                }
 
-            // Get column indexes
-            $dateIdx = array_search('date', $headers);
-            $descIdx = array_search('description', $headers);
-            $withdrawIdx = array_search('withdraw', $headers);
-            $depositIdx = array_search('deposit', $headers);
-            $balanceIdx = array_search('balance', $headers);
+                // Get column indexes from exact match
+                $dateIdx = array_search('date', $headers);
+                $descIdx = array_search('description', $headers);
+                $withdrawIdx = array_search('withdraw', $headers);
+                $depositIdx = array_search('deposit', $headers);
+                $balanceIdx = array_search('balance', $headers);
+            }
 
             $transactions = [];
             $errors = [];

@@ -127,4 +127,152 @@ class ImportTest extends TestCase
             'deposit' => null,
         ]);
     }
+
+    public function test_can_preview_file(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Transaction Date,Details,Debit,Credit,Closing Balance\n";
+        $csvContent .= "15/03/2024,Test Transaction,100.00,,900.00\n";
+        $csvContent .= "16/03/2024,Another Transaction,,50.00,950.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.preview'), [
+            'file' => $file
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $data = $response->json();
+        $this->assertArrayHasKey('headers', $data);
+        $this->assertArrayHasKey('preview', $data);
+        $this->assertArrayHasKey('mappings', $data);
+        $this->assertCount(5, $data['headers']);
+        $this->assertCount(2, $data['preview']);
+    }
+
+    public function test_auto_detects_column_mappings(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Transaction Date,Particulars,Debit,Credit,Balance\n";
+        $csvContent .= "15/03/2024,Test,100.00,,900.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.preview'), [
+            'file' => $file
+        ]);
+
+        $data = $response->json();
+        $mappings = $data['mappings'];
+
+        // Should auto-detect based on column names
+        $this->assertEquals(0, $mappings['date']); // Transaction Date
+        $this->assertEquals(1, $mappings['description']); // Particulars
+        $this->assertEquals(2, $mappings['withdraw']); // Debit
+        $this->assertEquals(3, $mappings['deposit']); // Credit
+        $this->assertEquals(4, $mappings['balance']); // Balance
+    }
+
+    public function test_can_import_with_custom_column_mappings(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Txn Date,Details,Debit Amt,Credit Amt,Closing Bal\n";
+        $csvContent .= "15/03/2024,Purchase at Store,200.00,,800.00\n";
+        $csvContent .= "16/03/2024,Salary,,3000.00,3800.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $columnMappings = json_encode([
+            'date' => 0,
+            'description' => 1,
+            'withdraw' => 2,
+            'deposit' => 3,
+            'balance' => 4,
+        ]);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'file' => $file,
+            'column_mappings' => $columnMappings,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertEquals(2, Transaction::count());
+        
+        $this->assertDatabaseHas('transactions', [
+            'bank_name' => 'Test Bank',
+            'description' => 'Purchase at Store',
+            'withdraw' => 200.00,
+        ]);
+        
+        $this->assertDatabaseHas('transactions', [
+            'bank_name' => 'Test Bank',
+            'description' => 'Salary',
+            'deposit' => 3000.00,
+        ]);
+    }
+
+    public function test_import_validates_required_column_mappings(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Col1,Col2,Col3\n";
+        $csvContent .= "15/03/2024,Test,100.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        // Missing required mappings
+        $columnMappings = json_encode([
+            'date' => 0,
+            'description' => 1,
+            // Missing balance
+        ]);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'file' => $file,
+            'column_mappings' => $columnMappings,
+        ]);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'success' => false,
+            ]);
+
+        $this->assertEquals(0, Transaction::count());
+    }
+
+    public function test_import_without_mappings_requires_exact_columns(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Txn Date,Details,Amt\n";
+        $csvContent .= "15/03/2024,Test,100.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'file' => $file,
+        ]);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'success' => false,
+                'needs_mapping' => true,
+            ]);
+
+        $this->assertEquals(0, Transaction::count());
+    }
 }
