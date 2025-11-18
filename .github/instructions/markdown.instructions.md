@@ -13,10 +13,6 @@ All documentation for the Bankroll project should be written in Markdown format.
 ```
 bankroll/
 ├── README.md                    # Main project overview
-├── docs/
-│   ├── user-guide.md           # End-user documentation
-│   ├── architecture.md         # Technical architecture
-│   └── deployment.md           # Deployment instructions
 └── prd/
     ├── gh-001.md               # Task 1
     ├── gh-002.md               # Task 2

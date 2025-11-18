@@ -38,7 +38,6 @@ Bankroll is a Laravel web application for importing, classifying, and exporting 
 bankroll/
 ├── src/                    # Laravel application code
 ├── prd/                    # Product requirement documents (tasks)
-├── docs/                   # Documentation
 ├── .github/
 │   ├── copilot-instructions.md          # This file
 │   └── instructions/
