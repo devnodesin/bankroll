@@ -241,7 +241,7 @@
 
     <!-- Import Modal -->
     <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="importModalLabel">Import Transactions</h5>
@@ -250,33 +250,93 @@
                 <form id="importForm" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="importBankName" class="form-label">Bank Name</label>
-                            <select class="form-select" id="importBankName" name="bank_name" required>
-                                <option value="">Select Bank</option>
-                                @foreach($banks as $bank)
-                                    <option value="{{ $bank }}">{{ $bank }}</option>
-                                @endforeach
-                            </select>
-                            <div class="form-text">If bank is not listed, add it using the Bank Management button first.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="importFile" class="form-label">Select File</label>
-                            <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
-                            <div class="form-text">Accepted formats: XLS, XLSX, CSV (Max 5MB)</div>
-                            <div class="form-text mt-2">
-                                <strong>Required columns:</strong> Date, Description, Withdraw, Deposit, Balance
+                        <!-- Step 1: File Selection -->
+                        <div id="fileSelectionStep">
+                            <div class="mb-3">
+                                <label for="importBankName" class="form-label">Bank Name</label>
+                                <select class="form-select" id="importBankName" name="bank_name" required>
+                                    <option value="">Select Bank</option>
+                                    @foreach($banks as $bank)
+                                        <option value="{{ $bank }}">{{ $bank }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text">If bank is not listed, add it using the Bank Management button first.</div>
                             </div>
-                            <div class="form-text mt-1">
-                                <strong>Date format:</strong> DD/MM/YYYY (e.g., 15/03/2024)
+                            <div class="mb-3">
+                                <label for="importFile" class="form-label">Select File</label>
+                                <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
+                                <div class="form-text">Accepted formats: XLS, XLSX, CSV (Max 5MB)</div>
+                                <div class="form-text mt-2">
+                                    The file should contain columns for: Date, Description, Withdraw, Deposit, and Balance
+                                </div>
                             </div>
                         </div>
-                        <div id="importErrors" class="alert alert-danger d-none"></div>
-                        <div id="importSuccess" class="alert alert-success d-none"></div>
+
+                        <!-- Step 2: Column Mapping -->
+                        <div id="columnMappingStep" class="d-none">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Map your file columns to the required fields
+                            </div>
+                            
+                            <!-- Preview Table -->
+                            <div class="mb-3">
+                                <h6>File Preview</h6>
+                                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm table-bordered" id="previewTable">
+                                        <thead class="table-light">
+                                            <tr id="previewHeaders"></tr>
+                                        </thead>
+                                        <tbody id="previewBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Column Mappings -->
+                            <div class="mb-3">
+                                <h6>Column Mappings</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Date <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm" id="mapDate" required></select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Description <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm" id="mapDescription" required></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Withdraw</label>
+                                        <select class="form-select form-select-sm" id="mapWithdraw"></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Deposit</label>
+                                        <select class="form-select form-select-sm" id="mapDeposit"></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Balance <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm" id="mapBalance" required></select>
+                                    </div>
+                                </div>
+                                <div class="form-text mt-2">
+                                    <span class="text-danger">*</span> Required fields
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="backToFileSelection">
+                                    <i class="bi bi-arrow-left"></i> Change File
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="importErrors" class="alert alert-danger d-none mt-3"></div>
+                        <div id="importSuccess" class="alert alert-success d-none mt-3"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="importButton">
+                        <button type="button" class="btn btn-primary" id="previewButton">
+                            <i class="bi bi-eye"></i> Preview & Map Columns
+                        </button>
+                        <button type="submit" class="btn btn-primary d-none" id="importButton">
                             <i class="bi bi-upload"></i> Import
                         </button>
                     </div>
@@ -972,10 +1032,127 @@
     // Import form handling
     const importForm = document.getElementById('importForm');
     const importButton = document.getElementById('importButton');
+    const previewButton = document.getElementById('previewButton');
     const importErrors = document.getElementById('importErrors');
     const importSuccess = document.getElementById('importSuccess');
     const importModal = document.getElementById('importModal');
+    const fileSelectionStep = document.getElementById('fileSelectionStep');
+    const columnMappingStep = document.getElementById('columnMappingStep');
+    const backToFileSelection = document.getElementById('backToFileSelection');
+    
+    let previewData = null;
+    let columnMappings = {};
 
+    // Preview button handler
+    previewButton.addEventListener('click', async () => {
+        const bankName = document.getElementById('importBankName').value;
+        const fileInput = document.getElementById('importFile');
+        
+        if (!bankName) {
+            alert('Please select a bank');
+            return;
+        }
+        
+        if (!fileInput.files[0]) {
+            alert('Please select a file');
+            return;
+        }
+        
+        importErrors.classList.add('d-none');
+        previewButton.disabled = true;
+        previewButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading Preview...';
+        
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        
+        try {
+            const response = await fetch('{{ route('transactions.preview') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                previewData = data;
+                showColumnMapping(data);
+            } else {
+                importErrors.innerHTML = data.message;
+                importErrors.classList.remove('d-none');
+            }
+        } catch (error) {
+            importErrors.textContent = 'Preview failed: ' + error.message;
+            importErrors.classList.remove('d-none');
+        } finally {
+            previewButton.disabled = false;
+            previewButton.innerHTML = '<i class="bi bi-eye"></i> Preview & Map Columns';
+        }
+    });
+
+    // Show column mapping step
+    function showColumnMapping(data) {
+        // Hide file selection, show mapping
+        fileSelectionStep.classList.add('d-none');
+        columnMappingStep.classList.remove('d-none');
+        previewButton.classList.add('d-none');
+        importButton.classList.remove('d-none');
+        
+        // Populate preview table
+        const previewHeaders = document.getElementById('previewHeaders');
+        const previewBody = document.getElementById('previewBody');
+        
+        previewHeaders.innerHTML = '';
+        data.headers.forEach(header => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            previewHeaders.appendChild(th);
+        });
+        
+        previewBody.innerHTML = '';
+        data.preview.forEach(row => {
+            const tr = document.createElement('tr');
+            row.forEach(cell => {
+                const td = document.createElement('td');
+                td.textContent = cell || '-';
+                tr.appendChild(td);
+            });
+            previewBody.appendChild(tr);
+        });
+        
+        // Populate mapping dropdowns
+        const mappingFields = ['Date', 'Description', 'Withdraw', 'Deposit', 'Balance'];
+        mappingFields.forEach(field => {
+            const select = document.getElementById(`map${field}`);
+            select.innerHTML = '<option value="">-- Select Column --</option>';
+            
+            data.headers.forEach((header, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = header;
+                select.appendChild(option);
+            });
+            
+            // Set auto-detected mapping
+            const fieldKey = field.toLowerCase();
+            if (data.mappings[fieldKey] !== null && data.mappings[fieldKey] !== undefined) {
+                select.value = data.mappings[fieldKey];
+            }
+        });
+    }
+
+    // Back to file selection
+    backToFileSelection.addEventListener('click', () => {
+        columnMappingStep.classList.add('d-none');
+        fileSelectionStep.classList.remove('d-none');
+        importButton.classList.add('d-none');
+        previewButton.classList.remove('d-none');
+        importErrors.classList.add('d-none');
+    });
+
+    // Import form submission
     importForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -984,7 +1161,26 @@
         importButton.disabled = true;
         importButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importing...';
 
+        // Get column mappings
+        columnMappings = {
+            date: parseInt(document.getElementById('mapDate').value) || null,
+            description: parseInt(document.getElementById('mapDescription').value) || null,
+            withdraw: parseInt(document.getElementById('mapWithdraw').value) || null,
+            deposit: parseInt(document.getElementById('mapDeposit').value) || null,
+            balance: parseInt(document.getElementById('mapBalance').value) || null,
+        };
+        
+        // Validate required mappings
+        if (columnMappings.date === null || columnMappings.description === null || columnMappings.balance === null) {
+            importErrors.textContent = 'Please map all required fields (Date, Description, Balance)';
+            importErrors.classList.remove('d-none');
+            importButton.disabled = false;
+            importButton.innerHTML = '<i class="bi bi-upload"></i> Import';
+            return;
+        }
+
         const formData = new FormData(importForm);
+        formData.append('column_mappings', JSON.stringify(columnMappings));
 
         try {
             const response = await fetch('{{ route('transactions.import') }}', {
@@ -1023,10 +1219,6 @@
                     });
                     errorMessage += '</ul>';
                 }
-                if (data.required && data.found) {
-                    errorMessage += '<div class="mt-2"><strong>Required:</strong> ' + data.required.join(', ') + '</div>';
-                    errorMessage += '<div><strong>Found:</strong> ' + data.found.join(', ') + '</div>';
-                }
                 importErrors.innerHTML = errorMessage;
                 importErrors.classList.remove('d-none');
             }
@@ -1044,6 +1236,12 @@
         importForm.reset();
         importErrors.classList.add('d-none');
         importSuccess.classList.add('d-none');
+        fileSelectionStep.classList.remove('d-none');
+        columnMappingStep.classList.add('d-none');
+        previewButton.classList.remove('d-none');
+        importButton.classList.add('d-none');
+        previewData = null;
+        columnMappings = {};
     });
 
     // Export handlers

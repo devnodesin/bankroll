@@ -83,12 +83,35 @@ php artisan user:list
 
 ## 📁 File Import Format
 
-Your import files must have these exact columns:
+### Quick Import (Exact Column Names)
+
+For fastest import, use these exact column names:
 
 | Date       | Description      | Withdraw | Deposit | Balance |
 | ---------- | ---------------- | -------- | ------- | ------- |
 | 2024-01-01 | Opening Balance  | -        | 5000.00 | 5000.00 |
 | 2024-01-05 | Salary Deposit   | -        | 3000.00 | 8000.00 |
 | 2024-01-10 | Grocery Shopping | 150.50   | -       | 7849.50 |
+
+### Column Mapping (Flexible Import)
+
+**New!** Import files with any column names using our column mapping feature:
+
+1. Upload your file (CSV, XLS, or XLSX)
+2. Click "Preview & Map Columns" to see your file structure
+3. Map your columns to the required fields:
+   - **Date** (Required) - Transaction date
+   - **Description** (Required) - Transaction details
+   - **Withdraw** (Optional) - Debit amount
+   - **Deposit** (Optional) - Credit amount
+   - **Balance** (Required) - Account balance after transaction
+4. Review the preview and click "Import"
+
+The system automatically detects common column variations like:
+- Date: "Transaction Date", "Txn Date", "Posting Date"
+- Description: "Particulars", "Details", "Narration"
+- Withdraw: "Debit", "Dr", "Amount Debited"
+- Deposit: "Credit", "Cr", "Amount Credited"
+- Balance: "Closing Balance", "Available Balance"
 
 **Supported date formats:** YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, Excel date numbers
