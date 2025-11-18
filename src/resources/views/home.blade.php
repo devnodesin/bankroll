@@ -821,7 +821,7 @@
             
             row.innerHTML = `
                 <td>${formatDate(transaction.date)}</td>
-                <td title="${transaction.description}">${truncateText(transaction.description, 50)}</td>
+                <td>${transaction.description}</td>
                 <td>
                     <div class="dropdown searchable-dropdown" data-transaction-id="${transaction.id}">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100 text-start category-display" 
@@ -1078,7 +1078,10 @@
     // Helper functions
     function formatDate(dateString) {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
     }
 
     function formatCurrency(value) {

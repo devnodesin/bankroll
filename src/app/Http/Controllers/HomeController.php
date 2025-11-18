@@ -74,7 +74,7 @@ class HomeController extends Controller
             ->where('bank_name', $request->bank)
             ->where('year', $request->year)
             ->where('month', $request->month)
-            ->orderByDesc('date')
+            ->orderBy('date')
             ->get();
 
         return response()->json([

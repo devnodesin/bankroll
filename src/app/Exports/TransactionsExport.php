@@ -25,7 +25,7 @@ class TransactionsExport implements FromCollection, WithColumnWidths, WithHeadin
 
         return $this->transactions->map(function ($transaction) use ($currencySymbol) {
             return [
-                'date' => $transaction->date->format('M d, Y'),
+                'date' => $transaction->date->format('d/m/Y'),
                 'description' => $transaction->description,
                 'category' => $transaction->category ? $transaction->category->name : '-',
                 'notes' => $transaction->notes ?? '-',
