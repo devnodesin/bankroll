@@ -39,6 +39,13 @@
         color: white;
     }
     
+    .searchable-dropdown .category-option.keyboard-highlighted {
+        background-color: var(--bs-primary);
+        color: white;
+        outline: 2px solid var(--bs-primary);
+        outline-offset: -2px;
+    }
+    
     .searchable-dropdown .category-display {
         font-size: 0.875rem;
         overflow: hidden;
@@ -881,16 +888,21 @@
             const searchInput = dropdown.querySelector('.category-search');
             const optionsContainer = dropdown.querySelector('.category-options');
             const options = dropdown.querySelectorAll('.category-option');
+            
+            let highlightedIndex = -1;
 
             // Handle search input
             searchInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
+                highlightedIndex = -1; // Reset highlighted index when searching
                 options.forEach(option => {
                     const text = option.textContent.toLowerCase();
                     if (text.includes(searchTerm)) {
                         option.style.display = 'block';
+                        option.classList.remove('keyboard-highlighted');
                     } else {
                         option.style.display = 'none';
+                        option.classList.remove('keyboard-highlighted');
                     }
                 });
             });
@@ -898,9 +910,59 @@
             // Clear search when dropdown opens
             dropdown.addEventListener('show.bs.dropdown', () => {
                 searchInput.value = '';
-                options.forEach(option => option.style.display = 'block');
+                highlightedIndex = -1;
+                options.forEach(option => {
+                    option.style.display = 'block';
+                    option.classList.remove('keyboard-highlighted');
+                });
                 searchInput.focus();
             });
+
+            // Keyboard navigation for search input
+            searchInput.addEventListener('keydown', (e) => {
+                const visibleOptions = Array.from(options).filter(opt => opt.style.display !== 'none');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    highlightedIndex = Math.min(highlightedIndex + 1, visibleOptions.length - 1);
+                    updateHighlight(visibleOptions);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    highlightedIndex = Math.max(highlightedIndex - 1, -1);
+                    updateHighlight(visibleOptions);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (highlightedIndex >= 0 && highlightedIndex < visibleOptions.length) {
+                        visibleOptions[highlightedIndex].click();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    // Close dropdown
+                    try {
+                        const bsDropdown = bootstrap.Dropdown.getInstance(displayBtn);
+                        if (bsDropdown) {
+                            bsDropdown.hide();
+                        }
+                    } catch (err) {
+                        dropdown.querySelector('.dropdown-menu').classList.remove('show');
+                        displayBtn.classList.remove('show');
+                        displayBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+
+            // Function to update visual highlight
+            function updateHighlight(visibleOptions) {
+                // Remove all keyboard highlights
+                options.forEach(opt => opt.classList.remove('keyboard-highlighted'));
+                
+                // Add highlight to current option
+                if (highlightedIndex >= 0 && highlightedIndex < visibleOptions.length) {
+                    visibleOptions[highlightedIndex].classList.add('keyboard-highlighted');
+                    // Scroll into view if needed
+                    visibleOptions[highlightedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            }
 
             // Handle option selection
             options.forEach(option => {
