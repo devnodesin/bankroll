@@ -102,7 +102,7 @@ class ExportController extends Controller
             ->where('bank_name', $bank)
             ->where('year', $year)
             ->where('month', $month)
-            ->orderBy('date', 'desc')
+            ->orderBy('date')
             ->get();
     }
 
