@@ -65,11 +65,10 @@
             <tr>
                 <th style="width: 10%;">Date</th>
                 <th style="width: 32%;">Description</th>
-                <th style="width: 14%;">Category</th>
-                <th style="width: 18%;">Notes</th>
-                <th style="width: 10%;" class="text-end">Withdraw</th>
-                <th style="width: 10%;" class="text-end">Deposit</th>
-                <th style="width: 10%;" class="text-end">Balance</th>
+                <th style="width: 22%;">Category</th>
+                <th style="width: 12%;" class="text-end">Withdraw</th>
+                <th style="width: 12%;" class="text-end">Deposit</th>
+                <th style="width: 12%;" class="text-end">Balance</th>
             </tr>
         </thead>
         <tbody>
@@ -77,8 +76,12 @@
             <tr>
                 <td>{{ $transaction->date->format('d/m/Y') }}</td>
                 <td>{{ $transaction->description }}</td>
-                <td>{{ $transaction->category ? $transaction->category->name : '-' }}</td>
-                <td>{{ $transaction->notes ?? '-' }}</td>
+                <td>
+                    {{ $transaction->category ? $transaction->category->name : '-' }}
+                    @if($transaction->notes)
+                    <br><span style="color: #6c757d;">[Notes: {{ $transaction->notes }}]</span>
+                    @endif
+                </td>
                 <td class="text-end">{{ $transaction->withdraw ? config('app.currency_symbol', '$') . number_format($transaction->withdraw, 2) : '-' }}</td>
                 <td class="text-end">{{ $transaction->deposit ? config('app.currency_symbol', '$') . number_format($transaction->deposit, 2) : '-' }}</td>
                 <td class="text-end">{{ config('app.currency_symbol', '$') }}{{ number_format($transaction->balance, 2) }}</td>
