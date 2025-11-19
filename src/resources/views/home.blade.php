@@ -270,17 +270,6 @@
                                 <div class="form-text">If bank is not listed, add it using the Bank Management button first.</div>
                             </div>
                             <div class="mb-3">
-                                <label for="dateFormat" class="form-label">Date Format <span class="text-danger">*</span></label>
-                                <select class="form-select" id="dateFormat" name="date_format" required>
-                                    <option value="">Select Date Format</option>
-                                    <option value="d/m/Y">DD/MM/YYYY (e.g., 15/03/2024) - European/Indian</option>
-                                    <option value="d/m/y">DD/MM/YY (e.g., 15/03/24) - Short Year</option>
-                                    <option value="m/d/Y">MM/DD/YYYY (e.g., 03/15/2024) - US Format</option>
-                                    <option value="Y-m-d">YYYY-MM-DD (e.g., 2024-03-15) - ISO 8601</option>
-                                </select>
-                                <div class="form-text">Select the date format used in your file to ensure accurate import.</div>
-                            </div>
-                            <div class="mb-3">
                                 <label for="importFile" class="form-label">Select File</label>
                                 <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
                                 <div class="form-text">Accepted formats: XLS, XLSX, CSV (Max 5MB)</div>
@@ -293,7 +282,7 @@
                         <!-- Step 2: Column Mapping -->
                         <div id="columnMappingStep" class="d-none">
                             <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i> Map your file columns to the required fields
+                                <i class="bi bi-info-circle"></i> Review the sample data below and select the date format used in your file
                             </div>
                             
                             <!-- Preview Table -->
@@ -307,6 +296,19 @@
                                         <tbody id="previewBody"></tbody>
                                     </table>
                                 </div>
+                            </div>
+
+                            <!-- Date Format Selection -->
+                            <div class="mb-3">
+                                <label for="dateFormat" class="form-label">Date Format <span class="text-danger">*</span></label>
+                                <select class="form-select" id="dateFormat" name="date_format" required>
+                                    <option value="">Select Date Format</option>
+                                    <option value="d/m/Y">DD/MM/YYYY (e.g., 15/03/2024) - European/Indian</option>
+                                    <option value="d/m/y">DD/MM/YY (e.g., 15/03/24) - Short Year</option>
+                                    <option value="m/d/Y">MM/DD/YYYY (e.g., 03/15/2024) - US Format</option>
+                                    <option value="Y-m-d">YYYY-MM-DD (e.g., 2024-03-15) - ISO 8601</option>
+                                </select>
+                                <div class="form-text">Look at the date values in the preview above and select the matching format.</div>
                             </div>
 
                             <!-- Column Mappings -->
@@ -1122,16 +1124,10 @@
     // Preview button handler
     previewButton.addEventListener('click', async () => {
         const bankName = document.getElementById('importBankName').value;
-        const dateFormat = document.getElementById('dateFormat').value;
         const fileInput = document.getElementById('importFile');
         
         if (!bankName) {
             alert('Please select a bank');
-            return;
-        }
-        
-        if (!dateFormat) {
-            alert('Please select a date format');
             return;
         }
         
@@ -1232,6 +1228,7 @@
         importButton.classList.add('d-none');
         previewButton.classList.remove('d-none');
         importErrors.classList.add('d-none');
+        document.getElementById('dateFormat').value = ''; // Reset date format selection
     });
 
     // Import form submission
@@ -1242,6 +1239,16 @@
         importSuccess.classList.add('d-none');
         importButton.disabled = true;
         importButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importing...';
+
+        // Validate date format is selected
+        const dateFormat = document.getElementById('dateFormat').value;
+        if (!dateFormat) {
+            importErrors.textContent = 'Please select a date format';
+            importErrors.classList.remove('d-none');
+            importButton.disabled = false;
+            importButton.innerHTML = '<i class="bi bi-upload"></i> Import';
+            return;
+        }
 
         // Get column mappings
         const dateVal = document.getElementById('mapDate').value;
@@ -1330,6 +1337,7 @@
         importButton.classList.add('d-none');
         previewData = null;
         columnMappings = {};
+        document.getElementById('dateFormat').value = ''; // Reset date format selection
     });
 
     // Export handlers
