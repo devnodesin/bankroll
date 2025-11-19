@@ -21,7 +21,7 @@ A clean, minimal Laravel 12.x web application for importing, classifying, and ex
 - Effortless classification: assign categories and notes
 - Flexible category management (system & custom)
 - One-click export (**Excel, CSV, PDF**)
-- Responsive, modern UI with theme modes (Light, Dark, Auto)
+- Responsive, modern UI with theme modes (Sepia, Light, Dark, Auto)
 
 ## Installation
 
@@ -136,3 +136,53 @@ The system automatically detects common column variations like:
 - Balance: "Closing Balance", "Available Balance"
 
 **Supported date formats:** YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, Excel date numbers
+
+## 🎨 Theme System
+
+Bankroll includes four theme modes for optimal viewing comfort:
+
+### Available Themes
+
+1. **Sepia (Default)** - A warm, low-glare theme with beige tones, designed to reduce eye strain during extended use
+2. **Light** - Classic bright theme with high contrast
+3. **Dark** - Modern dark theme for low-light environments
+4. **Auto** - Automatically switches between light and dark based on system preferences
+
+### Switching Themes
+
+Click the theme toggle button in the navbar to cycle through all available themes. Your preference is automatically saved and persists across sessions.
+
+### Sepia Theme Details
+
+The sepia theme is optimized for:
+- **Eye Comfort**: Warm beige (#f5f1e8) background reduces screen glare
+- **Accessibility**: All color combinations meet WCAG AA contrast requirements
+- **Extended Reading**: Deep brown (#3d2f1f) text provides excellent readability
+- **Visual Hierarchy**: Subtle borders and elevation using muted brown tones
+
+#### Technical Implementation
+
+The sepia theme is implemented as a standalone CSS file (`public/css/theme-sepia.css`) that overrides Bootstrap 5.3's CSS custom properties when `data-bs-theme="sepia"` is set. This approach:
+- Requires no changes to application code
+- Can be easily customized or extended
+- Works seamlessly with Bootstrap's component system
+- Maintains full accessibility standards
+
+#### Optional Usage
+
+While sepia is the default theme, you can:
+
+1. **Test in Browser DevTools**: Temporarily change the theme by modifying the `data-bs-theme` attribute on the `<html>` element
+2. **Create Bookmarklet**: Use this code to toggle sepia theme on any page:
+   ```javascript
+   javascript:(function(){document.documentElement.setAttribute('data-bs-theme','sepia');})();
+   ```
+3. **Customize Colors**: Edit `public/css/theme-sepia.css` to adjust the color palette to your preference
+
+All themes are designed with:
+- ✅ WCAG AA compliant contrast ratios
+- ✅ Consistent hover and focus states
+- ✅ Proper form control styling
+- ✅ Readable tables, alerts, and badges
+- ✅ Accessible navigation elements
+
