@@ -58,27 +58,27 @@ chmod 666 data/database.sqlite
 
 ```bash
 # Build the Docker image
-docker-compose build
+docker compose build
 
 # Start the container
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 6. Run Database Migrations
 
 ```bash
 # Run migrations to set up the database schema
-docker-compose exec bankroll php artisan migrate --force
+docker compose exec bankroll php artisan migrate --force
 
 # (Optional) Seed with sample categories
-docker-compose exec bankroll php artisan db:seed --force
+docker compose exec bankroll php artisan db:seed --force
 ```
 
 ### 7. Create Admin User
 
 ```bash
 # Create your first user
-docker-compose exec bankroll php artisan user:add admin your_password
+docker compose exec bankroll php artisan user:add admin your_password
 ```
 
 ### 8. Access the Application
@@ -137,29 +137,29 @@ server {
 
 ```bash
 # View all logs
-docker-compose logs
+docker compose logs
 
 # Follow logs in real-time
-docker-compose logs -f
+docker compose logs -f
 
 # View only Bankroll logs
-docker-compose logs -f bankroll
+docker compose logs -f bankroll
 ```
 
 ### Stop Container
 
 ```bash
 # Stop the container
-docker-compose stop
+docker compose stop
 
 # Stop and remove containers
-docker-compose down
+docker compose down
 ```
 
 ### Restart Container
 
 ```bash
-docker-compose restart
+docker compose restart
 ```
 
 ### Update Application
@@ -169,28 +169,28 @@ docker-compose restart
 git pull
 
 # Rebuild and restart
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 
 # Run any new migrations
-docker-compose exec bankroll php artisan migrate --force
+docker compose exec bankroll php artisan migrate --force
 ```
 
 ## User Management
 
 ```bash
 # Add a new user
-docker-compose exec bankroll php artisan user:add username password
+docker compose exec bankroll php artisan user:add username password
 
 # Add user with email
-docker-compose exec bankroll php artisan user:add username password --email=user@example.com
+docker compose exec bankroll php artisan user:add username password --email=user@example.com
 
 # Remove a user
-docker-compose exec bankroll php artisan user:remove username
+docker compose exec bankroll php artisan user:remove username
 
 # List all users
-docker-compose exec bankroll php artisan user:list
+docker compose exec bankroll php artisan user:list
 ```
 
 ## Maintenance
@@ -209,36 +209,36 @@ docker cp bankroll:/var/www/html/database/database.sqlite ./backup-$(date +%Y%m%
 
 ```bash
 # Stop the container
-docker-compose stop
+docker compose stop
 
 # Restore from backup
 cp data/database.sqlite.backup.YYYYMMDD_HHMMSS data/database.sqlite
 
 # Start the container
-docker-compose start
+docker compose start
 ```
 
 ### Clear Cache
 
 ```bash
 # Clear all caches
-docker-compose exec bankroll php artisan cache:clear
-docker-compose exec bankroll php artisan config:clear
-docker-compose exec bankroll php artisan view:clear
+docker compose exec bankroll php artisan cache:clear
+docker compose exec bankroll php artisan config:clear
+docker compose exec bankroll php artisan view:clear
 ```
 
 ### Optimize for Production
 
 ```bash
 # Optimize the application
-docker-compose exec bankroll php artisan optimize
+docker compose exec bankroll php artisan optimize
 ```
 
 ## Troubleshooting
 
 ### Container won't start
 
-1. Check logs: `docker-compose logs bankroll`
+1. Check logs: `docker compose logs bankroll`
 2. Verify APP_KEY is set in docker-compose.yml
 3. Ensure data directory exists and has proper permissions
 
@@ -246,22 +246,22 @@ docker-compose exec bankroll php artisan optimize
 
 1. Check database file exists: `ls -la data/database.sqlite`
 2. Verify permissions: `chmod 666 data/database.sqlite`
-3. Run migrations: `docker-compose exec bankroll php artisan migrate --force`
+3. Run migrations: `docker compose exec bankroll php artisan migrate --force`
 
 ### Permission denied errors
 
 ```bash
 # Fix storage permissions
-docker-compose exec -u root bankroll chown -R www-data:www-data storage bootstrap/cache database
-docker-compose exec -u root bankroll chmod -R 775 storage bootstrap/cache database
+docker compose exec -u root bankroll chown -R www-data:www-data storage bootstrap/cache database
+docker compose exec -u root bankroll chmod -R 775 storage bootstrap/cache database
 ```
 
 ### Cannot access application
 
-1. Check if container is running: `docker-compose ps`
-2. Verify port bindings: `docker-compose port bankroll 80`
+1. Check if container is running: `docker compose ps`
+2. Verify port bindings: `docker compose port bankroll 80`
 3. Check firewall settings
-4. Review logs: `docker-compose logs bankroll`
+4. Review logs: `docker compose logs bankroll`
 
 ## Docker Image Details
 
@@ -326,7 +326,7 @@ Create multiple compose files:
 - `docker-compose.prod.yml` - Production overrides
 - `docker-compose.dev.yml` - Development overrides
 
-Use with: `docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
+Use with: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
 
 ## Support
 

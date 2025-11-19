@@ -33,7 +33,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v docker &> /dev/null || ! docker compose version &> /dev/null; then
     print_error "Docker Compose is not installed. Please install Docker Compose first."
     exit 1
 fi
@@ -77,13 +77,13 @@ fi
 # Build Docker image
 echo ""
 echo "Step 4: Building Docker image..."
-docker-compose build
+docker compose build
 print_success "Docker image built successfully"
 
 # Start containers
 echo ""
 echo "Step 5: Starting containers..."
-docker-compose up -d
+docker compose up -d
 print_success "Containers started"
 
 # Wait for container to be ready
@@ -94,7 +94,7 @@ sleep 5
 # Run migrations
 echo ""
 echo "Step 7: Running database migrations..."
-docker-compose exec -T bankroll php artisan migrate --force
+docker compose exec -T bankroll php artisan migrate --force
 print_success "Migrations completed"
 
 # Check if we should seed
@@ -102,7 +102,7 @@ echo ""
 read -p "Do you want to seed the database with sample categories? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    docker-compose exec -T bankroll php artisan db:seed --force
+    docker compose exec -T bankroll php artisan db:seed --force
     print_success "Database seeded"
 fi
 
@@ -115,7 +115,7 @@ if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     read -p "Enter username: " username
     read -s -p "Enter password: " password
     echo ""
-    docker-compose exec -T bankroll php artisan user:add "$username" "$password"
+    docker compose exec -T bankroll php artisan user:add "$username" "$password"
     print_success "Admin user created"
 fi
 
@@ -130,11 +130,11 @@ echo "  HTTP:  http://localhost:8000"
 echo "  HTTPS: https://localhost:8443"
 echo ""
 echo "Useful commands:"
-echo "  - View logs: docker-compose logs -f"
-echo "  - Stop: docker-compose stop"
-echo "  - Start: docker-compose start"
-echo "  - Restart: docker-compose restart"
-echo "  - Remove: docker-compose down"
+echo "  - View logs: docker compose logs -f"
+echo "  - Stop: docker compose stop"
+echo "  - Start: docker compose start"
+echo "  - Restart: docker compose restart"
+echo "  - Remove: docker compose down"
 echo ""
 echo "For more information, see DEPLOYMENT.md"
 echo ""

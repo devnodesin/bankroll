@@ -62,23 +62,23 @@ chmod 666 data/database.sqlite
 ### 4. Build and Start
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 5. Initialize Database
 
 ```bash
 # Run migrations
-docker-compose exec bankroll php artisan migrate --force
+docker compose exec bankroll php artisan migrate --force
 
 # (Optional) Seed categories
-docker-compose exec bankroll php artisan db:seed --force
+docker compose exec bankroll php artisan db:seed --force
 ```
 
 ### 6. Create User
 
 ```bash
-docker-compose exec bankroll php artisan user:add admin your_password
+docker compose exec bankroll php artisan user:add admin your_password
 ```
 
 ### 7. Access Application
@@ -89,25 +89,25 @@ Open your browser: `http://localhost:8000`
 
 ```bash
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop application
-docker-compose stop
+docker compose stop
 
 # Start application
-docker-compose start
+docker compose start
 
 # Restart application
-docker-compose restart
+docker compose restart
 
 # Stop and remove containers
-docker-compose down
+docker compose down
 
 # Add new user
-docker-compose exec bankroll php artisan user:add username password
+docker compose exec bankroll php artisan user:add username password
 
 # List users
-docker-compose exec bankroll php artisan user:list
+docker compose exec bankroll php artisan user:list
 
 # Backup database
 cp data/database.sqlite data/database.sqlite.backup
@@ -128,7 +128,7 @@ Edit `docker-compose.yml` to customize:
 
 ```bash
 # Check logs
-docker-compose logs bankroll
+docker compose logs bankroll
 
 # Verify APP_KEY is set
 grep APP_KEY docker-compose.yml
@@ -138,8 +138,8 @@ grep APP_KEY docker-compose.yml
 
 ```bash
 # Fix permissions
-docker-compose exec -u root bankroll chown -R www-data:www-data storage bootstrap/cache database
-docker-compose exec -u root bankroll chmod -R 775 storage bootstrap/cache database
+docker compose exec -u root bankroll chown -R www-data:www-data storage bootstrap/cache database
+docker compose exec -u root bankroll chmod -R 775 storage bootstrap/cache database
 ```
 
 ### Database errors
@@ -152,7 +152,7 @@ ls -la data/database.sqlite
 chmod 666 data/database.sqlite
 
 # Re-run migrations
-docker-compose exec bankroll php artisan migrate --force
+docker compose exec bankroll php artisan migrate --force
 ```
 
 ### Port already in use
