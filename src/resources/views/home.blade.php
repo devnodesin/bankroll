@@ -143,8 +143,7 @@
                                 <tr>
                                     <th>Date</th>
                                     <th>Description</th>
-                                    <th>Category</th>
-                                    <th>Notes</th>
+                                    <th>Category & Notes</th>
                                     <th class="text-end">Withdraw</th>
                                     <th class="text-end">Deposit</th>
                                     <th class="text-end">Balance</th>
@@ -898,9 +897,7 @@
                             </div>
                         </div>
                     </div>
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm notes-input" 
+                    <input type="text" class="form-control form-control-sm notes-input mt-2" 
                            data-transaction-id="${transaction.id}" 
                            value="${transaction.notes || ''}" 
                            placeholder="Add notes...">
