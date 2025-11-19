@@ -37,7 +37,7 @@ class CategoryTest extends TestCase
         $response->assertStatus(201)
             ->assertJson([
                 'success' => true,
-                'message' => 'Category added successfully.',
+                'message' => "Category 'Test Custom Category' has been added successfully.",
             ]);
 
         $this->assertDatabaseHas('categories', [
@@ -105,7 +105,7 @@ class CategoryTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => "Category 'To Delete' deleted successfully.",
+                'message' => "Category 'To Delete' has been deleted successfully.",
             ]);
 
         $this->assertDatabaseMissing('categories', [
@@ -124,7 +124,7 @@ class CategoryTest extends TestCase
         $response->assertStatus(403)
             ->assertJson([
                 'success' => false,
-                'message' => 'System categories cannot be deleted.',
+                'message' => "System category 'System Category' cannot be deleted. Only custom categories can be removed.",
             ]);
 
         $this->assertDatabaseHas('categories', [

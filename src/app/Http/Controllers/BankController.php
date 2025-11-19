@@ -28,15 +28,19 @@ class BankController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100|unique:banks,name',
+        ], [
+            'name.required' => 'Bank name is required.',
+            'name.max' => 'Bank name cannot exceed 100 characters.',
+            'name.unique' => 'A bank with this name already exists.',
         ]);
 
         $bank = Bank::create([
-            'name' => $request->name,
+            'name' => trim($request->name),
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Bank added successfully.',
+            'message' => "Bank '{$bank->name}' has been added successfully.",
             'bank' => $bank,
         ]);
     }
@@ -51,15 +55,16 @@ class BankController extends Controller
         if ($transactionCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => "Cannot delete bank '{$bank->name}'. It has {$transactionCount} transaction(s).",
+                'message' => "Cannot delete '{$bank->name}' because it has {$transactionCount} transaction(s). Remove all transactions first or keep this bank for historical records.",
             ], 400);
         }
 
+        $bankName = $bank->name;
         $bank->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Bank deleted successfully.',
+            'message' => "Bank '{$bankName}' has been deleted successfully.",
         ]);
     }
 }

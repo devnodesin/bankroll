@@ -36,6 +36,8 @@ class CategoryController extends Controller
                 Rule::unique('categories', 'name')->whereNull('deleted_at')
             ]
         ], [
+            'name.required' => 'Category name is required.',
+            'name.max' => 'Category name cannot exceed 50 characters.',
             'name.unique' => 'A category with this name already exists.'
         ]);
 
@@ -46,7 +48,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Category added successfully.',
+            'message' => "Category '{$category->name}' has been added successfully.",
             'category' => $category
         ], 201);
     }
@@ -60,7 +62,7 @@ class CategoryController extends Controller
         if (!$category->is_custom) {
             return response()->json([
                 'success' => false,
-                'message' => 'System categories cannot be deleted.'
+                'message' => "System category '{$category->name}' cannot be deleted. Only custom categories can be removed."
             ], 403);
         }
 
@@ -70,7 +72,7 @@ class CategoryController extends Controller
         if ($usageCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => "Cannot delete category. It is being used by {$usageCount} transaction(s).",
+                'message' => "Cannot delete '{$category->name}' because it is assigned to {$usageCount} transaction(s). Remove the category from all transactions first.",
                 'usage_count' => $usageCount
             ], 400);
         }
@@ -80,7 +82,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Category '{$categoryName}' deleted successfully."
+            'message' => "Category '{$categoryName}' has been deleted successfully."
         ]);
     }
 

@@ -383,7 +383,7 @@ class ImportTest extends TestCase
             ]);
 
         $data = $response->json();
-        $this->assertStringContainsString('Invalid date format', $data['errors'][0]);
+        $this->assertStringContainsString('not in the expected format', $data['errors'][0]);
         $this->assertStringContainsString('MM/DD/YYYY', $data['errors'][0]);
         
         $this->assertEquals(0, Transaction::count());
