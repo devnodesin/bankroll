@@ -93,10 +93,18 @@ class HomeController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $transaction->update([
-            'category_id' => $request->category_id,
-            'notes' => $request->notes,
-        ]);
+        // Only update fields that are present in the request
+        $updateData = [];
+        
+        if ($request->has('category_id')) {
+            $updateData['category_id'] = $request->category_id;
+        }
+        
+        if ($request->has('notes')) {
+            $updateData['notes'] = $request->notes;
+        }
+
+        $transaction->update($updateData);
 
         return response()->json([
             'success' => true,
