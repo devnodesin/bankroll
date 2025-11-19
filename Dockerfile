@@ -1,16 +1,18 @@
 # Multi-stage Dockerfile for Bankroll using FrankenPHP
 # Stage 1: Builder - Install dependencies and build assets
-FROM dunglas/frankenphp:1-php8.3-alpine AS builder
+FROM dunglas/frankenphp:1-php8.3 AS builder
 
 # Install system dependencies and build tools
-RUN apk add --no-cache \
-    nodejs \
-    npm \
+RUN apt-get update && apt-get install -y \
+    curl \
     git \
     unzip \
-    libzip-dev \
-    oniguruma-dev \
-    && install-php-extensions \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install required PHP extensions
+RUN install-php-extensions \
     pdo_sqlite \
     zip \
     mbstring \
@@ -48,13 +50,15 @@ RUN npm run build
 RUN rm -rf node_modules
 
 # Stage 2: Final - FrankenPHP production image
-FROM dunglas/frankenphp:1-php8.3-alpine
+FROM dunglas/frankenphp:1-php8.3
 
-# Install runtime dependencies and PHP extensions
-RUN apk add --no-cache \
-    libzip \
-    oniguruma \
-    && install-php-extensions \
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install required PHP extensions
+RUN install-php-extensions \
     pdo_sqlite \
     zip \
     mbstring \
@@ -64,12 +68,16 @@ RUN apk add --no-cache \
 # Configure PHP for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Set recommended PHP.ini settings
-RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini && \
-    echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini && \
-    echo "opcache.interned_strings_buffer=16" >> $PHP_INI_DIR/conf.d/opcache.ini && \
-    echo "opcache.max_accelerated_files=20000" >> $PHP_INI_DIR/conf.d/opcache.ini && \
-    echo "opcache.validate_timestamps=0" >> $PHP_INI_DIR/conf.d/opcache.ini
+# Set recommended PHP.ini settings for opcache
+RUN { \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.memory_consumption=256'; \
+    echo 'opcache.interned_strings_buffer=16'; \
+    echo 'opcache.max_accelerated_files=20000'; \
+    echo 'opcache.validate_timestamps=0'; \
+    echo 'opcache.revalidate_freq=0'; \
+    echo 'opcache.fast_shutdown=1'; \
+    } > $PHP_INI_DIR/conf.d/opcache.ini
 
 # Set working directory
 WORKDIR /var/www/html
@@ -93,19 +101,19 @@ RUN chown -R www-data:www-data \
     bootstrap/cache \
     database
 
-# Set www-data as the user
+# Switch to www-data user
 USER www-data
 
-# Expose port 80 and 443 (FrankenPHP handles both)
+# Expose ports
 EXPOSE 80 443
 
-# Set FrankenPHP as the default server
+# Set FrankenPHP environment variables
 ENV FRANKENPHP_CONFIG="worker ./public/index.php"
 ENV SERVER_NAME=":80"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD ["php", "-r", "exit(0);"]
+    CMD php -r "exit(0);"
 
 # Start FrankenPHP
-ENTRYPOINT ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
+CMD ["frankenphp", "run"]
