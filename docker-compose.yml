@@ -27,10 +27,6 @@ services:
       DB_CONNECTION: "sqlite"
       DB_DATABASE: "/bankroll/data/database.sqlite"
       
-      # FrankenPHP Configuration
-      SERVER_NAME: ":80, :443"
-      FRANKENPHP_CONFIG: "worker /bankroll/public/index.php"
-      
 
     healthcheck:
       test: ["CMD", "php", "-r", "exit(0);"]

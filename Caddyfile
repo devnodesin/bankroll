@@ -1,0 +1,15 @@
+{
+	# Global options
+	auto_https off
+	admin off
+	frankenphp {
+		num_threads {$NUM_THREADS:2}
+	}
+}
+
+# HTTP server on ports 80 and 443
+:80, :443 {
+	root * /bankroll/public
+	encode gzip
+	php_server
+}

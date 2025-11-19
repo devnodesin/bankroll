@@ -85,21 +85,29 @@ WORKDIR /bankroll
 # Copy application from builder stage
 COPY --from=builder --chown=www-data:www-data /app ./
 
+# Copy Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
+
 # Ensure data directory exists for database
 RUN mkdir -p data
 
 # Create empty database file if it doesn't exist
 RUN touch data/database.sqlite
 
+# Create Caddy data directory for TLS certificates
+RUN mkdir -p /data/caddy
+
 # Set proper permissions
 RUN chown -R www-data:www-data \
     storage \
     bootstrap/cache \
-    data && \
+    data \
+    /data/caddy && \
     chmod -R 775 \
     storage \
     bootstrap/cache \
-    data
+    data \
+    /data/caddy
 
 # Switch to www-data user
 USER www-data
@@ -107,13 +115,9 @@ USER www-data
 # Expose ports
 EXPOSE 80 443
 
-# Set FrankenPHP environment variables
-ENV FRANKENPHP_CONFIG="worker ./public/index.php"
-ENV SERVER_NAME=":80"
-
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD php -r "exit(0);"
 
-# Start FrankenPHP
-CMD ["frankenphp", "run"]
+# Start FrankenPHP with Caddyfile
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
