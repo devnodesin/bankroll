@@ -1,57 +1,40 @@
-# Docker Quick Start Guide
+# Bankroll Docker Quick Start & Deployment Guide
 
-Get Bankroll running with Docker in under 5 minutes!
+Get Bankroll running with Docker and FrankenPHP in minutes.
+
+---
 
 ## Prerequisites
 
 - Docker Engine 20.10+
 - Docker Compose v2.0+
+- 512MB+ RAM, 1GB+ disk space
 
-## Quick Start (Automated)
+---
 
-Use the deployment script for automated setup:
+## Clone & Setup
 
 ```bash
 # Clone the repository
 git clone https://github.com/devnodesin/bankroll.git
 cd bankroll
-
-# Run deployment script
-./deploy.sh
 ```
 
-The script will:
-1. Create necessary directories
-2. Create the SQLite database file
-3. Build the Docker image
-4. Start the containers
-5. Run migrations
-6. Optionally seed the database
-7. Optionally create an admin user
+---
 
-## Quick Start (Manual)
+## Configure Environment
 
-### 1. Generate Application Key
-
-```bash
-# Using PHP locally (if available)
-php src/artisan key:generate --show
-
-# OR using Docker
-docker run --rm -v $(pwd)/src:/app -w /app composer:latest php artisan key:generate --show
-```
-
-Copy the generated key (looks like `base64:xxxxxxxxxxxxx`).
-
-### 2. Update Configuration
-
-Edit `docker-compose.yml` and replace `YOUR_APP_KEY_HERE` with your generated key:
+Edit `docker-compose.yml` and set your APP_KEY:
 
 ```yaml
-APP_KEY: "base64:your_actual_key_here"
+APP_KEY: "base64:YOUR_GENERATED_KEY_HERE"  # Replace with your key
+APP_URL: "http://localhost:8000"           # Or your domain
+APP_DEBUG: "false"                         # "true" for dev only
+CURRENCY_SYMBOL: "₹"                       # Change if needed
 ```
 
-### 3. Prepare Data Directory
+---
+
 
 ```bash
 mkdir -p data/logs
@@ -59,116 +42,73 @@ touch data/database.sqlite
 chmod 666 data/database.sqlite
 ```
 
-### 4. Build and Start
+---
+
 
 ```bash
+# Build the Docker image
+docker compose build
+
+# Start the containers
 docker compose up -d
 ```
+---
 
-### 5. Initialize Database
+## 6. Initialize Database
 
 ```bash
 # Run migrations
 docker compose exec bankroll php artisan migrate --force
-
 # (Optional) Seed categories
 docker compose exec bankroll php artisan db:seed --force
 ```
 
-### 6. Create User
+---
+
 
 ```bash
+# Add admin user
 docker compose exec bankroll php artisan user:add admin your_password
 ```
 
-### 7. Access Application
 
-Open your browser: `http://localhost:8000`
+## 8. Access Application
+- HTTPS: [https://localhost:8443](https://localhost:8443) (self-signed)
 
-## Common Commands
+---
 
 ```bash
 # View logs
 docker compose logs -f
 
-# Stop application
+# Stop/start/restart
 docker compose stop
-
-# Start application
+# ...
 docker compose start
-
-# Restart application
 docker compose restart
 
-# Stop and remove containers
+# Remove containers
 docker compose down
 
-# Add new user
+# Add/list/remove users
 docker compose exec bankroll php artisan user:add username password
-
-# List users
 docker compose exec bankroll php artisan user:list
+docker compose exec bankroll php artisan user:remove username
 
 # Backup database
 cp data/database.sqlite data/database.sqlite.backup
 ```
 
-## Customization
+---
 
-Edit `docker-compose.yml` to customize:
+## Production & Security Notes
 
-- **Port**: Change `8000:80` to use different port
-- **Currency**: Change `CURRENCY_SYMBOL` value
-- **Domain**: Update `APP_URL` for your domain
-- **Debug**: Set `APP_DEBUG: "true"` for debugging (not recommended for production)
-
-## Troubleshooting
-
-### Container won't start
-
+- Set `APP_ENV: "production"` and `APP_DEBUG: "false"` for production
+- Use strong passwords and a unique APP_KEY
+- Regularly backup `data/database.sqlite`
+- Use HTTPS and consider a reverse proxy (Nginx/Caddy)
+- Fix permissions if needed:
 ```bash
-# Check logs
-docker compose logs bankroll
-
-# Verify APP_KEY is set
-grep APP_KEY docker-compose.yml
-```
-
-### Permission errors
-
-```bash
-# Fix permissions
 docker compose exec -u root bankroll chown -R www-data:www-data storage bootstrap/cache database
 docker compose exec -u root bankroll chmod -R 775 storage bootstrap/cache database
 ```
-
-### Database errors
-
-```bash
-# Verify database file exists
-ls -la data/database.sqlite
-
-# Fix permissions
-chmod 666 data/database.sqlite
-
-# Re-run migrations
-docker compose exec bankroll php artisan migrate --force
-```
-
-### Port already in use
-
-Edit `docker-compose.yml` and change the ports:
-
-```yaml
-ports:
-  - "8080:80"  # Changed from 8000:80
-  - "8443:443"
-```
-
-## Need Help?
-
-- Full Documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
-- Issues: https://github.com/devnodesin/bankroll/issues
-- Repository: https://github.com/devnodesin/bankroll
-
-Built with ❤️ by [Devnodes.in](https://devnodes.in)

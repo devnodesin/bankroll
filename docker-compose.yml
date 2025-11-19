@@ -10,12 +10,11 @@ services:
       - "8443:443"
     volumes:
       # Mount SQLite database file
-      - ./data/database.sqlite:/var/www/html/database/database.sqlite
+      - ./data/database.sqlite:/bankroll/database/database.sqlite
       # Mount logs directory
-      - ./data/logs:/var/www/html/storage/logs
+      - ./data/logs:/bankroll/storage/logs
     environment:
       # Application Environment
-      APP_NAME: "Bankroll"
       APP_ENV: "production"
       APP_KEY: "base64:YOUR_APP_KEY_HERE"  # Generate with: php artisan key:generate --show
       APP_DEBUG: "false"
@@ -36,29 +35,7 @@ services:
       
       # Database Configuration (SQLite)
       DB_CONNECTION: "sqlite"
-      DB_DATABASE: "/var/www/html/database/database.sqlite"
-      
-      # Session Configuration
-      SESSION_DRIVER: "database"
-      SESSION_LIFETIME: "120"
-      SESSION_ENCRYPT: "false"
-      SESSION_PATH: "/"
-      SESSION_DOMAIN: "null"
-      
-      # Cache Configuration
-      CACHE_STORE: "database"
-      
-      # Queue Configuration
-      QUEUE_CONNECTION: "database"
-      
-      # Other Configurations
-      BROADCAST_CONNECTION: "log"
-      FILESYSTEM_DISK: "local"
-      
-      # Mail Configuration
-      MAIL_MAILER: "log"
-      MAIL_FROM_ADDRESS: "hello@example.com"
-      MAIL_FROM_NAME: "Bankroll"
+      DB_DATABASE: "/bankroll/database/database.sqlite"
     healthcheck:
       test: ["CMD", "php", "-r", "exit(0);"]
       interval: 30s

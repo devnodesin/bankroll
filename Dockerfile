@@ -80,7 +80,7 @@ RUN { \
     } > $PHP_INI_DIR/conf.d/opcache.ini
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /bankroll
 
 # Copy application from builder stage
 COPY --from=builder --chown=www-data:www-data /app ./
