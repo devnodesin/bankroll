@@ -1,17 +1,19 @@
 # Multi-stage Dockerfile for Bankroll using FrankenPHP
+# Optimized for production with minimal image size and security best practices
+
 # Stage 1: Builder - Install dependencies and build assets
 FROM dunglas/frankenphp:1-php8.3 AS builder
 
-# Install system dependencies and build tools
+# Install system dependencies and Node.js for building frontend assets
 RUN apt-get update && apt-get install -y \
     curl \
     git \
     unzip \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*  # Clean up to reduce layer size
 
-# Install required PHP extensions
+# Install required PHP extensions for Laravel and SQLite
 RUN install-php-extensions \
     pdo_sqlite \
     zip \
@@ -19,45 +21,44 @@ RUN install-php-extensions \
     gd \
     opcache
 
-# Install Composer
+# Copy Composer from official image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /app
 
-# Copy composer files
+# Copy dependency files first for better layer caching
 COPY src/composer.json src/composer.lock ./
 
-# Install PHP dependencies (no dev dependencies for production)
+# Install PHP dependencies (production only, no dev packages)
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
-# Copy package files
+# Copy Node.js package files
 COPY src/package.json src/package-lock.json ./
 
-# Install Node.js dependencies
+# Install Node.js dependencies (clean install for reproducibility)
 RUN npm ci
 
-# Copy application files
+# Copy all application files
 COPY src/ ./
 
-# Generate optimized autoloader
+# Generate optimized autoloader for production
 RUN composer dump-autoload --optimize --no-dev
 
-# Build frontend assets
+# Build frontend assets (Vite)
 RUN npm run build
 
-# Clean up node_modules to save space
+# Remove Node.js dependencies to reduce final image size
 RUN rm -rf node_modules
 
-# Stage 2: Final - FrankenPHP production image
+# Stage 2: Final - Minimal production image
 FROM dunglas/frankenphp:1-php8.3
 
-# Install runtime dependencies
+# Install runtime dependencies (SQLite CLI for debugging)
 RUN apt-get update && apt-get install -y \
     sqlite3 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*  # Clean up package lists
 
-# Install required PHP extensions
+# Install the same PHP extensions as builder
 RUN install-php-extensions \
     pdo_sqlite \
     zip \
@@ -65,10 +66,10 @@ RUN install-php-extensions \
     gd \
     opcache
 
-# Configure PHP for production
+# Use production PHP configuration
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Set recommended PHP.ini settings for opcache
+# Configure OPcache for optimal performance
 RUN { \
     echo 'opcache.enable=1'; \
     echo 'opcache.memory_consumption=256'; \
@@ -79,25 +80,21 @@ RUN { \
     echo 'opcache.fast_shutdown=1'; \
     } > $PHP_INI_DIR/conf.d/opcache.ini
 
-# Set working directory
 WORKDIR /bankroll
 
-# Copy application from builder stage
+# Copy built application from builder stage with correct ownership
 COPY --from=builder --chown=www-data:www-data /app ./
 
-# Copy Caddyfile
+# Copy Caddyfile for FrankenPHP web server configuration
 COPY Caddyfile /etc/caddy/Caddyfile
 
-# Ensure data directory exists for database
-RUN mkdir -p data
+# Create required directories
+RUN mkdir -p data /data/caddy
 
-# Create empty database file if it doesn't exist
+# Create empty database file (will be mounted as volume in production)
 RUN touch data/database.sqlite
 
-# Create Caddy data directory for TLS certificates
-RUN mkdir -p /data/caddy
-
-# Set proper permissions
+# Set permissions for writable directories
 RUN chown -R www-data:www-data \
     storage \
     bootstrap/cache \
@@ -109,13 +106,13 @@ RUN chown -R www-data:www-data \
     data \
     /data/caddy
 
-# Switch to www-data user
+# Run as non-root user for security
 USER www-data
 
-# Expose ports
+# Expose HTTP and HTTPS ports
 EXPOSE 80 443
 
-# Health check
+# Health check to verify container is running properly
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD php -r "exit(0);"
 
