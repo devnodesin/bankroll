@@ -125,4 +125,64 @@ class ExportTest extends TestCase
         // Export should complete in less than 5 seconds for 50 records
         $this->assertLessThan(5, $executionTime, 'Export took too long: '.$executionTime.' seconds');
     }
+
+    public function test_pdf_export_displays_notes_below_category(): void
+    {
+        $this->actingAs($this->user);
+
+        // Create a category
+        $category = Category::create(['name' => 'INCOME:OTHER', 'is_system' => false]);
+
+        // Create transactions with notes using DB insert
+        \DB::table('transactions')->insert([
+            'bank_name' => 'Test Bank PDF',
+            'date' => now()->format('Y-m-d'),
+            'description' => 'Test Transaction with Notes',
+            'withdraw' => null,
+            'deposit' => 100.00,
+            'balance' => 10000.00,
+            'category_id' => $category->id,
+            'notes' => 'TEST Transfer',
+            'year' => now()->year,
+            'month' => now()->month,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Get transactions for view rendering test
+        $transactions = Transaction::with('category')
+            ->where('bank_name', 'Test Bank PDF')
+            ->where('year', now()->year)
+            ->where('month', now()->month)
+            ->get();
+
+        // Render the PDF view
+        $view = view('exports.transactions-pdf', [
+            'transactions' => $transactions,
+            'title' => 'Test PDF',
+            'bank' => 'Test Bank PDF',
+            'month' => now()->format('F'),
+            'year' => now()->year,
+        ])->render();
+
+        // Verify the view doesn't have a Notes column header
+        $this->assertStringNotContainsString('<th style="width: 18%;">Notes</th>', $view);
+
+        // Verify the category column width is increased
+        $this->assertStringContainsString('<th style="width: 22%;">Category</th>', $view);
+
+        // Verify notes are displayed below category with muted color
+        $this->assertStringContainsString('[Notes: TEST Transfer]', $view);
+        $this->assertStringContainsString('color: #6c757d', $view);
+
+        // Test PDF export endpoint still works
+        $response = $this->get(route('transactions.export.pdf', [
+            'bank' => 'Test Bank PDF',
+            'year' => now()->year,
+            'month' => now()->month,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+    }
 }
