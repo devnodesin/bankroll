@@ -1,0 +1,68 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+LICENSE.md
+CHANGELOG.md
+prd/
+.github/
+
+# IDE and editor files
+.vscode
+.idea
+.fleet
+.nova
+.zed
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development containers
+.devcontainer
+
+# Build artifacts and dependencies
+src/node_modules
+src/vendor
+src/public/build
+src/public/hot
+src/public/storage
+
+# Environment files
+src/.env
+src/.env.*
+!src/.env.example
+
+# Testing
+src/.phpunit.cache
+src/.phpunit.result.cache
+src/phpunit.xml
+
+# Storage and cache (will be created in container)
+src/storage/logs/*
+src/storage/framework/cache/*
+src/storage/framework/sessions/*
+src/storage/framework/testing/*
+src/storage/framework/views/*
+src/bootstrap/cache/*
+
+# Temporary files
+*.log
+*.cache
+tmp/
+temp/
+
+# Database (will be mounted as volume)
+src/database/database.sqlite
+src/database/*.sqlite
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore
