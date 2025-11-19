@@ -36,7 +36,7 @@ class BankTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Bank added successfully.',
+                'message' => "Bank 'Test Bank' has been added successfully.",
             ]);
 
         $this->assertDatabaseHas('banks', [
@@ -92,6 +92,7 @@ class BankTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
+                'message' => "Bank 'To Delete' has been deleted successfully.",
             ]);
 
         $this->assertDatabaseMissing('banks', [

@@ -4,30 +4,34 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: bankroll
-    restart: unless-stopped
+    restart: unless-stopped  # Restart automatically unless manually stopped
+    
+    # Port mapping: host:container
     ports:
-      - "8000:80"
-      - "8443:443"
+      - "8000:80"   # Main HTTP port
+      - "8443:443"  # Alternative HTTP port (use reverse proxy for HTTPS)
+    
+    # Persistent volumes for data and logs
     volumes:
-      # Mount SQLite database file
-      - ./data/database.sqlite:/bankroll/data/database.sqlite
-      # Mount logs directory
-      - ./data/logs:/bankroll/storage/logs
+      - ./data/database.sqlite:/bankroll/data/database.sqlite  # SQLite database
+      - ./data/logs:/bankroll/storage/logs                     # Application logs
+    
+    # Application configuration
     environment:
-      # Application Environment
-      APP_ENV: "production"
-      # Currency Configuration
-      CURRENCY_SYMBOL: "₹"
-      # Generate with: php artisan key:generate --show
-      APP_KEY: base64:zRuC51slKq8yusnJx3iZ7LDh0NijEf7x1sxITkQ0Fe4=
-      APP_DEBUG: "false"
-      APP_URL: "http://localhost:8000"
+      # Application settings
+      APP_ENV: "production"                                     # production|local|development
+      APP_DEBUG: "false"                                        # Set to "true" only for debugging
+      APP_URL: "http://localhost:8000"                          # Change to your domain in production
+      APP_KEY: base64:zRuC51slKq8yusnJx3iZ7LDh0NijEf7x1sxITkQ0Fe4=  # Generate with: php artisan key:generate --show
       
-      # Database Configuration
+      # Currency symbol (₹, $, €, £, ¥, etc.)
+      CURRENCY_SYMBOL: "₹"
+      
+      # Database configuration (SQLite)
       DB_CONNECTION: "sqlite"
       DB_DATABASE: "/bankroll/data/database.sqlite"
-      
-
+    
+    # Health check to verify container is running properly
     healthcheck:
       test: ["CMD", "php", "-r", "exit(0);"]
       interval: 30s

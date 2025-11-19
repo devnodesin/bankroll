@@ -17,8 +17,15 @@ class ExportController extends Controller
     {
         $request->validate([
             'bank' => 'required|string',
-            'year' => 'required|integer',
+            'year' => 'required|integer|min:1900|max:2100',
             'month' => 'required|integer|min:1|max:12',
+        ], [
+            'bank.required' => 'Please select a bank to export.',
+            'year.required' => 'Please select a year to export.',
+            'year.integer' => 'Year must be a valid number.',
+            'month.required' => 'Please select a month to export.',
+            'month.min' => 'Month must be between 1 and 12.',
+            'month.max' => 'Month must be between 1 and 12.',
         ]);
 
         $transactions = $this->getFilteredTransactions(
@@ -39,8 +46,15 @@ class ExportController extends Controller
     {
         $request->validate([
             'bank' => 'required|string',
-            'year' => 'required|integer',
+            'year' => 'required|integer|min:1900|max:2100',
             'month' => 'required|integer|min:1|max:12',
+        ], [
+            'bank.required' => 'Please select a bank to export.',
+            'year.required' => 'Please select a year to export.',
+            'year.integer' => 'Year must be a valid number.',
+            'month.required' => 'Please select a month to export.',
+            'month.min' => 'Month must be between 1 and 12.',
+            'month.max' => 'Month must be between 1 and 12.',
         ]);
 
         $transactions = $this->getFilteredTransactions(
@@ -61,8 +75,15 @@ class ExportController extends Controller
     {
         $request->validate([
             'bank' => 'required|string',
-            'year' => 'required|integer',
+            'year' => 'required|integer|min:1900|max:2100',
             'month' => 'required|integer|min:1|max:12',
+        ], [
+            'bank.required' => 'Please select a bank to export.',
+            'year.required' => 'Please select a year to export.',
+            'year.integer' => 'Year must be a valid number.',
+            'month.required' => 'Please select a month to export.',
+            'month.min' => 'Month must be between 1 and 12.',
+            'month.max' => 'Month must be between 1 and 12.',
         ]);
 
         $transactions = $this->getFilteredTransactions(

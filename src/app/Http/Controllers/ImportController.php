@@ -18,6 +18,10 @@ class ImportController extends Controller
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5MB max
+        ], [
+            'file.required' => 'Please select a file to preview.',
+            'file.mimes' => 'File must be in Excel (.xlsx, .xls) or CSV format.',
+            'file.max' => 'File size cannot exceed 5MB.',
         ]);
 
         try {
@@ -52,7 +56,7 @@ class ImportController extends Controller
             Log::error('Preview error', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to preview file: ' . $e->getMessage()
+                'message' => 'Unable to read the file. Please ensure it is a valid Excel or CSV file and try again.'
             ], 500);
         }
     }
@@ -106,6 +110,14 @@ class ImportController extends Controller
             'bank_name' => 'required|string|max:100',
             'column_mappings' => 'nullable|json',
             'date_format' => 'required|string|in:d/m/Y,d/m/y,m/d/Y,Y-m-d',
+        ], [
+            'file.required' => 'Please select a file to import.',
+            'file.mimes' => 'File must be in Excel (.xlsx, .xls) or CSV format.',
+            'file.max' => 'File size cannot exceed 5MB.',
+            'bank_name.required' => 'Please select a bank.',
+            'bank_name.max' => 'Bank name cannot exceed 100 characters.',
+            'date_format.required' => 'Please select a date format.',
+            'date_format.in' => 'Invalid date format selected.',
         ]);
 
         try {
@@ -125,7 +137,7 @@ class ImportController extends Controller
             if (empty($rows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The file is empty.'
+                    'message' => 'The uploaded file is empty. Please check your file and try again.'
                 ], 400);
             }
 
@@ -147,7 +159,7 @@ class ImportController extends Controller
                 if (!empty($missingMappings)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Missing required column mappings: ' . implode(', ', $missingMappings),
+                        'message' => 'Please map the following required columns: ' . implode(', ', $missingMappings) . '. These fields are mandatory for importing transactions.',
                     ], 400);
                 }
             } else {
@@ -165,7 +177,7 @@ class ImportController extends Controller
                 if (!empty($missingColumns)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Missing required columns: ' . implode(', ', $missingColumns),
+                        'message' => 'Your file is missing required columns: ' . implode(', ', $missingColumns) . '. Please use the column mapping feature to map your columns correctly.',
                         'required' => $requiredColumns,
                         'found' => array_values(array_filter($rows[0], fn($v) => !empty(trim($v)))),
                         'needs_mapping' => true, // Signal that column mapping is needed
@@ -197,7 +209,7 @@ class ImportController extends Controller
                     
                     if (!$date) {
                         $formatDisplay = $this->getDateFormatDisplay($dateFormat);
-                        $errors[] = "Row " . ($i + 1) . ": Invalid date format '{$row[$dateIdx]}'. Expected {$formatDisplay}";
+                        $errors[] = "Row " . ($i + 1) . ": The date '{$row[$dateIdx]}' is not in the expected format. Expected {$formatDisplay}";
                         continue;
                     }
 
@@ -206,12 +218,12 @@ class ImportController extends Controller
                     $balance = $this->parseAmount($row[$balanceIdx] ?? '');
 
                     if ($balance === null) {
-                        $errors[] = "Row " . ($i + 1) . ": Balance is required";
+                        $errors[] = "Row " . ($i + 1) . ": Balance field is required and must contain a valid number";
                         continue;
                     }
 
                     if ($withdraw === null && $deposit === null) {
-                        $errors[] = "Row " . ($i + 1) . ": At least one of Withdraw or Deposit must have a value";
+                        $errors[] = "Row " . ($i + 1) . ": Either Withdraw or Deposit must have a value (both cannot be empty)";
                         continue;
                     }
 
@@ -236,7 +248,7 @@ class ImportController extends Controller
                 Log::error('Import validation errors', ['errors' => $errors]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation errors found',
+                    'message' => 'Found ' . count($errors) . ' error(s) in your file. Please fix the issues below and try again.',
                     'errors' => $errors
                 ], 400);
             }
@@ -244,7 +256,7 @@ class ImportController extends Controller
             if (empty($transactions)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No valid transactions found in the file.'
+                    'message' => 'No valid transactions found in the file. Please check that your file contains transaction data and try again.'
                 ], 400);
             }
 
@@ -254,10 +266,11 @@ class ImportController extends Controller
                 Transaction::insert($transactions);
                 DB::commit();
 
+                $count = count($transactions);
                 return response()->json([
                     'success' => true,
-                    'message' => count($transactions) . ' transactions imported successfully.',
-                    'count' => count($transactions)
+                    'message' => "Successfully imported {$count} transaction" . ($count === 1 ? '' : 's') . " for {$bankName}.",
+                    'count' => $count
                 ]);
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -268,7 +281,7 @@ class ImportController extends Controller
             Log::error('Import error', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Import failed: ' . $e->getMessage()
+                'message' => 'Import failed due to an unexpected error. Please verify your file format and try again.'
             ], 500);
         }
     }

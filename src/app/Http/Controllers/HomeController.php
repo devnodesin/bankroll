@@ -43,7 +43,13 @@ class HomeController extends Controller
     {
         $request->validate([
             'bank' => 'required|string',
-            'year' => 'required|integer',
+            'year' => 'required|integer|min:1900|max:2100',
+        ], [
+            'bank.required' => 'Please select a bank.',
+            'year.required' => 'Please select a year.',
+            'year.integer' => 'Year must be a valid number.',
+            'year.min' => 'Year must be 1900 or later.',
+            'year.max' => 'Year must be 2100 or earlier.',
         ]);
 
         $months = Transaction::where('bank_name', $request->bank)
@@ -91,6 +97,9 @@ class HomeController extends Controller
         $request->validate([
             'category_id' => 'nullable|exists:categories,id',
             'notes' => 'nullable|string|max:500',
+        ], [
+            'category_id.exists' => 'The selected category does not exist.',
+            'notes.max' => 'Notes cannot exceed 500 characters.',
         ]);
 
         // Only update fields that are present in the request
@@ -101,14 +110,14 @@ class HomeController extends Controller
         }
 
         if ($request->has('notes')) {
-            $updateData['notes'] = $request->notes;
+            $updateData['notes'] = $request->notes ? trim($request->notes) : null;
         }
 
         $transaction->update($updateData);
 
         return response()->json([
             'success' => true,
-            'message' => 'Transaction updated successfully.',
+            'message' => 'Transaction classification updated successfully.',
         ]);
     }
 }
