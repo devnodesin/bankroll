@@ -1,5 +1,6 @@
 services:
   bankroll:
+    image: bankroll:latest
     build:
       context: .
       dockerfile: Dockerfile
