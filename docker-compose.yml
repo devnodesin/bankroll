@@ -10,32 +10,28 @@ services:
       - "8443:443"
     volumes:
       # Mount SQLite database file
-      - ./data/database.sqlite:/bankroll/database/database.sqlite
+      - ./data/database.sqlite:/bankroll/data/database.sqlite
       # Mount logs directory
       - ./data/logs:/bankroll/storage/logs
     environment:
       # Application Environment
       APP_ENV: "production"
-      APP_KEY: "base64:YOUR_APP_KEY_HERE"  # Generate with: php artisan key:generate --show
+      # Currency Configuration
+      CURRENCY_SYMBOL: "₹"
+      # Generate with: php artisan key:generate --show
+      APP_KEY: base64:zRuC51slKq8yusnJx3iZ7LDh0NijEf7x1sxITkQ0Fe4=
       APP_DEBUG: "false"
       APP_URL: "http://localhost:8000"
       
-      # Currency Configuration
-      CURRENCY_SYMBOL: "₹"
-      
-      # Application Settings
-      APP_LOCALE: "en"
-      APP_FALLBACK_LOCALE: "en"
-      APP_FAKER_LOCALE: "en_US"
-      
-      # Logging
-      LOG_CHANNEL: "stack"
-      LOG_STACK: "single"
-      LOG_LEVEL: "error"
-      
-      # Database Configuration (SQLite)
+      # Database Configuration
       DB_CONNECTION: "sqlite"
-      DB_DATABASE: "/bankroll/database/database.sqlite"
+      DB_DATABASE: "/bankroll/data/database.sqlite"
+      
+      # FrankenPHP Configuration
+      SERVER_NAME: ":80, :443"
+      FRANKENPHP_CONFIG: "worker /bankroll/public/index.php"
+      
+
     healthcheck:
       test: ["CMD", "php", "-r", "exit(0);"]
       interval: 30s

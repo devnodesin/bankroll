@@ -85,21 +85,21 @@ WORKDIR /bankroll
 # Copy application from builder stage
 COPY --from=builder --chown=www-data:www-data /app ./
 
-# Ensure database directory exists
-RUN mkdir -p database
+# Ensure data directory exists for database
+RUN mkdir -p data
 
 # Create empty database file if it doesn't exist
-RUN touch database/database.sqlite
+RUN touch data/database.sqlite
 
 # Set proper permissions
 RUN chown -R www-data:www-data \
     storage \
     bootstrap/cache \
-    database && \
+    data && \
     chmod -R 775 \
     storage \
     bootstrap/cache \
-    database
+    data
 
 # Switch to www-data user
 USER www-data
