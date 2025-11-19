@@ -105,12 +105,14 @@ class ImportController extends Controller
             'file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5MB max
             'bank_name' => 'required|string|max:100',
             'column_mappings' => 'nullable|json',
+            'date_format' => 'required|string|in:d/m/Y,d/m/y,m/d/Y,Y-m-d',
         ]);
 
         try {
             $file = $request->file('file');
             $bankName = $request->bank_name;
             $columnMappings = $request->column_mappings ? json_decode($request->column_mappings, true) : null;
+            $dateFormat = $request->date_format;
             
             // Ensure bank exists in banks table
             \App\Models\Bank::firstOrCreate(['name' => $bankName]);
@@ -191,10 +193,11 @@ class ImportController extends Controller
                 }
 
                 try {
-                    $date = $this->parseDate($row[$dateIdx]);
+                    $date = $this->parseDate($row[$dateIdx], $dateFormat);
                     
                     if (!$date) {
-                        $errors[] = "Row " . ($i + 1) . ": Invalid date format '{$row[$dateIdx]}'. Expected DD/MM/YYYY (e.g., 15/03/2024)";
+                        $formatDisplay = $this->getDateFormatDisplay($dateFormat);
+                        $errors[] = "Row " . ($i + 1) . ": Invalid date format '{$row[$dateIdx]}'. Expected {$formatDisplay}";
                         continue;
                     }
 
@@ -271,9 +274,9 @@ class ImportController extends Controller
     }
 
     /**
-     * Parse date from various formats (DD/MM/YYYY is primary format)
+     * Parse date using the specified format
      */
-    private function parseDate($value)
+    private function parseDate($value, $format)
     {
         if (empty($value)) {
             return null;
@@ -285,18 +288,39 @@ class ImportController extends Controller
                 $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
                 return \Carbon\Carbon::instance($date);
             } catch (\Exception $e) {
-                // Continue to try other formats
+                // Continue to try the specified format
             }
         }
 
-        // Primary format: DD/MM/YYYY (Indian/European format)
-        // Try common date formats with DD/MM/YYYY as priority
-        $formats = ['d/m/Y', 'd-m-Y', 'd.m.Y', 'Y-m-d', 'm/d/Y', 'm-d-Y', 'Y/m/d'];
-        foreach ($formats as $format) {
+        // Try to parse with the specified format
+        try {
+            $date = \Carbon\Carbon::createFromFormat($format, trim($value));
+            if ($date && $date->format($format) === trim($value)) {
+                // Validate that the parsed date matches the input exactly
+                return $date;
+            }
+        } catch (\Exception $e) {
+            // Format parsing failed
+        }
+
+        // Try variant formats (replace separators)
+        $separators = ['/', '-', '.'];
+        $currentSeparator = '/';
+        if (strpos($format, '-') !== false) {
+            $currentSeparator = '-';
+        } elseif (strpos($format, '.') !== false) {
+            $currentSeparator = '.';
+        }
+
+        foreach ($separators as $separator) {
+            if ($separator === $currentSeparator) {
+                continue;
+            }
+            
+            $variantFormat = str_replace($currentSeparator, $separator, $format);
             try {
-                $date = \Carbon\Carbon::createFromFormat($format, trim($value));
-                if ($date && $date->format($format) === trim($value)) {
-                    // Validate that the parsed date matches the input exactly
+                $date = \Carbon\Carbon::createFromFormat($variantFormat, trim($value));
+                if ($date && $date->format($variantFormat) === trim($value)) {
                     return $date;
                 }
             } catch (\Exception $e) {
@@ -304,12 +328,22 @@ class ImportController extends Controller
             }
         }
 
-        // Try natural language parsing as last resort
-        try {
-            return \Carbon\Carbon::parse($value);
-        } catch (\Exception $e) {
-            return null;
-        }
+        return null;
+    }
+
+    /**
+     * Get display format for date format code
+     */
+    private function getDateFormatDisplay($format)
+    {
+        $displays = [
+            'd/m/Y' => 'DD/MM/YYYY (e.g., 15/03/2024)',
+            'd/m/y' => 'DD/MM/YY (e.g., 15/03/24)',
+            'm/d/Y' => 'MM/DD/YYYY (e.g., 03/15/2024)',
+            'Y-m-d' => 'YYYY-MM-DD (e.g., 2024-03-15)',
+        ];
+
+        return $displays[$format] ?? $format;
     }
 
     /**

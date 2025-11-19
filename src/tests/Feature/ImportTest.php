@@ -108,6 +108,7 @@ class ImportTest extends TestCase
 
         $response = $this->post(route('transactions.import'), [
             'bank_name' => 'Test Bank',
+            'date_format' => 'd/m/Y',
             'file' => $file
         ]);
 
@@ -199,6 +200,7 @@ class ImportTest extends TestCase
 
         $response = $this->post(route('transactions.import'), [
             'bank_name' => 'Test Bank',
+            'date_format' => 'd/m/Y',
             'file' => $file,
             'column_mappings' => $columnMappings,
         ]);
@@ -241,6 +243,7 @@ class ImportTest extends TestCase
 
         $response = $this->post(route('transactions.import'), [
             'bank_name' => 'Test Bank',
+            'date_format' => 'd/m/Y',
             'file' => $file,
             'column_mappings' => $columnMappings,
         ]);
@@ -264,6 +267,7 @@ class ImportTest extends TestCase
 
         $response = $this->post(route('transactions.import'), [
             'bank_name' => 'Test Bank',
+            'date_format' => 'd/m/Y',
             'file' => $file,
         ]);
 
@@ -274,5 +278,157 @@ class ImportTest extends TestCase
             ]);
 
         $this->assertEquals(0, Transaction::count());
+    }
+
+    public function test_can_import_with_dd_mm_yy_format(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Date,Description,Withdraw,Deposit,Balance\n";
+        $csvContent .= "15/03/24,Test Transaction 1,100.00,,900.00\n";
+        $csvContent .= "16/03/24,Test Transaction 2,,50.00,950.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'date_format' => 'd/m/y',
+            'file' => $file
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertEquals(2, Transaction::count());
+        
+        $transaction = Transaction::first();
+        $this->assertEquals('2024-03-15', $transaction->date->format('Y-m-d'));
+    }
+
+    public function test_can_import_with_mm_dd_yyyy_format(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Date,Description,Withdraw,Deposit,Balance\n";
+        $csvContent .= "03/15/2024,Test Transaction 1,100.00,,900.00\n";
+        $csvContent .= "03/16/2024,Test Transaction 2,,50.00,950.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'date_format' => 'm/d/Y',
+            'file' => $file
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertEquals(2, Transaction::count());
+        
+        $transaction = Transaction::first();
+        $this->assertEquals('2024-03-15', $transaction->date->format('Y-m-d'));
+    }
+
+    public function test_can_import_with_yyyy_mm_dd_format(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Date,Description,Withdraw,Deposit,Balance\n";
+        $csvContent .= "2024-03-15,Test Transaction 1,100.00,,900.00\n";
+        $csvContent .= "2024-03-16,Test Transaction 2,,50.00,950.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'date_format' => 'Y-m-d',
+            'file' => $file
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertEquals(2, Transaction::count());
+        
+        $transaction = Transaction::first();
+        $this->assertEquals('2024-03-15', $transaction->date->format('Y-m-d'));
+    }
+
+    public function test_import_rejects_wrong_date_format(): void
+    {
+        $this->actingAs($this->user);
+
+        // File has DD/MM/YYYY dates but user selects MM/DD/YYYY format
+        $csvContent = "Date,Description,Withdraw,Deposit,Balance\n";
+        $csvContent .= "15/03/2024,Test Transaction,100.00,,900.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'date_format' => 'm/d/Y', // Wrong format
+            'file' => $file
+        ]);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'success' => false,
+            ]);
+
+        $data = $response->json();
+        $this->assertStringContainsString('Invalid date format', $data['errors'][0]);
+        $this->assertStringContainsString('MM/DD/YYYY', $data['errors'][0]);
+        
+        $this->assertEquals(0, Transaction::count());
+    }
+
+    public function test_import_validates_date_format_parameter(): void
+    {
+        $this->actingAs($this->user);
+
+        $csvContent = "Date,Description,Withdraw,Deposit,Balance\n";
+        $csvContent .= "15/03/2024,Test,100.00,,900.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'date_format' => 'invalid-format',
+            'file' => $file
+        ]);
+
+        $response->assertSessionHasErrors('date_format');
+    }
+
+    public function test_import_accepts_dates_with_different_separators(): void
+    {
+        $this->actingAs($this->user);
+
+        // File has dates with hyphens instead of slashes
+        $csvContent = "Date,Description,Withdraw,Deposit,Balance\n";
+        $csvContent .= "15-03-2024,Test Transaction 1,100.00,,900.00\n";
+        $csvContent .= "16.03.2024,Test Transaction 2,,50.00,950.00\n";
+
+        $file = UploadedFile::fake()->createWithContent('transactions.csv', $csvContent);
+
+        $response = $this->post(route('transactions.import'), [
+            'bank_name' => 'Test Bank',
+            'date_format' => 'd/m/Y', // Format uses /, but file uses - and .
+            'file' => $file
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertEquals(2, Transaction::count());
     }
 }
