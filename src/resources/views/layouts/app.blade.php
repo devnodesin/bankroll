@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="sepia">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Sepia Theme -->
+    <link href="{{ asset('css/theme-sepia.css') }}" rel="stylesheet">
     
     @stack('styles')
 </head>
@@ -34,13 +36,14 @@
         
         // Theme icons
         const icons = {
+            sepia: 'bi-file-earmark-text',
             light: 'bi-sun-fill',
             dark: 'bi-moon-stars-fill',
             auto: 'bi-circle-half'
         };
         
-        // Get saved theme or default to dark
-        let currentTheme = localStorage.getItem('theme') || 'dark';
+        // Get saved theme or default to sepia
+        let currentTheme = localStorage.getItem('theme') || 'sepia';
         
         // Apply theme on page load
         function applyTheme(theme) {
@@ -65,14 +68,16 @@
         // Theme toggle click handler
         if (themeToggle) {
             themeToggle.addEventListener('click', () => {
-                // Cycle through themes: light -> dark -> auto -> light
+                // Cycle through themes: sepia -> light -> dark -> auto -> sepia
                 let nextTheme;
-                if (currentTheme === 'light') {
+                if (currentTheme === 'sepia') {
+                    nextTheme = 'light';
+                } else if (currentTheme === 'light') {
                     nextTheme = 'dark';
                 } else if (currentTheme === 'dark') {
                     nextTheme = 'auto';
                 } else {
-                    nextTheme = 'light';
+                    nextTheme = 'sepia';
                 }
                 
                 applyTheme(nextTheme);

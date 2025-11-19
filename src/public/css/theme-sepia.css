@@ -1,0 +1,387 @@
+/**
+ * Bankroll - Sepia Theme
+ * 
+ * A warm, low-glare theme using sepia tones.
+ * Designed to be easy on the eyes with proper contrast ratios (WCAG AA compliant).
+ * 
+ * Usage: 
+ * 1. Include this stylesheet after Bootstrap 5.3
+ * 2. Set data-bs-theme="sepia" on the <html> element
+ * 
+ * Built with ❤️ by Devnodes.in
+ */
+
+[data-bs-theme="sepia"] {
+    /* ========================================
+     * Core Color Palette
+     * ======================================== */
+    
+    /* Base Colors - Warm beige/brown tones */
+    --bs-body-bg: #f5f1e8;              /* Warm beige background */
+    --bs-body-color: #3d2f1f;           /* Deep brown text (contrast ratio: 10.5:1) */
+    --bs-body-color-rgb: 61, 47, 31;
+    
+    /* Secondary backgrounds with subtle elevation */
+    --bs-secondary-bg: #ebe5d8;         /* Slightly darker beige for cards */
+    --bs-tertiary-bg: #e3dac9;          /* Even darker for hover states */
+    
+    /* Borders and dividers */
+    --bs-border-color: #d4c7b0;         /* Muted brown border */
+    --bs-border-color-translucent: rgba(139, 119, 88, 0.15);
+    
+    /* ========================================
+     * Typography
+     * ======================================== */
+    
+    --bs-heading-color: #2d2115;        /* Darker brown for headings */
+    --bs-emphasis-color: #2d2115;       /* Strong emphasis */
+    --bs-secondary-color: rgba(61, 47, 31, 0.75);  /* Secondary text */
+    --bs-secondary-color-rgb: 61, 47, 31;
+    --bs-tertiary-color: rgba(61, 47, 31, 0.5);    /* Tertiary text */
+    --bs-tertiary-color-rgb: 61, 47, 31;
+    
+    /* ========================================
+     * Links
+     * ======================================== */
+    
+    --bs-link-color: #8b5a2b;           /* Warm brown link (contrast: 4.8:1) */
+    --bs-link-color-rgb: 139, 90, 43;
+    --bs-link-hover-color: #6d4522;     /* Darker on hover */
+    --bs-link-hover-color-rgb: 109, 69, 34;
+    
+    /* ========================================
+     * Brand Colors (Theme-adapted)
+     * ======================================== */
+    
+    /* Primary - Warm brown/tan */
+    --bs-primary: #9c6d3d;              /* Warm tan/brown (accessible) */
+    --bs-primary-rgb: 156, 109, 61;
+    --bs-primary-bg-subtle: #e8dcc9;
+    --bs-primary-text-emphasis: #6d4522;
+    --bs-primary-border-subtle: #d4c7b0;
+    
+    /* Secondary - Cooler brown */
+    --bs-secondary: #7a6854;
+    --bs-secondary-rgb: 122, 104, 84;
+    --bs-secondary-bg-subtle: #e3ddd4;
+    --bs-secondary-text-emphasis: #4d4237;
+    --bs-secondary-border-subtle: #c9bfb0;
+    
+    /* Success - Olive/moss green */
+    --bs-success: #6b7d3f;              /* Olive green that fits sepia palette */
+    --bs-success-rgb: 107, 125, 63;
+    --bs-success-bg-subtle: #e3e8d4;
+    --bs-success-text-emphasis: #4a5829;
+    --bs-success-border-subtle: #c9d4af;
+    
+    /* Info - Muted blue-gray */
+    --bs-info: #5d7a8c;                 /* Dusty blue */
+    --bs-info-rgb: 93, 122, 140;
+    --bs-info-bg-subtle: #dde5e9;
+    --bs-info-text-emphasis: #3d5159;
+    --bs-info-border-subtle: #bfcdd4;
+    
+    /* Warning - Warm amber */
+    --bs-warning: #b8860b;              /* Dark goldenrod */
+    --bs-warning-rgb: 184, 134, 11;
+    --bs-warning-bg-subtle: #f5ecd4;
+    --bs-warning-text-emphasis: #7a5808;
+    --bs-warning-border-subtle: #e3d4a8;
+    
+    /* Danger - Warm red-brown */
+    --bs-danger: #a04a3a;               /* Terracotta red */
+    --bs-danger-rgb: 160, 74, 58;
+    --bs-danger-bg-subtle: #f0dcd8;
+    --bs-danger-text-emphasis: #6d3227;
+    --bs-danger-border-subtle: #d9bfb8;
+    
+    /* Light and Dark */
+    --bs-light: #f5f1e8;
+    --bs-light-rgb: 245, 241, 232;
+    --bs-dark: #3d2f1f;
+    --bs-dark-rgb: 61, 47, 31;
+    
+    /* ========================================
+     * Form Controls
+     * ======================================== */
+    
+    --bs-form-control-bg: #fdfcfa;      /* Very light beige for inputs */
+    --bs-form-control-disabled-bg: #ebe5d8;
+    --bs-form-control-color: #3d2f1f;
+    --bs-form-valid-color: #6b7d3f;
+    --bs-form-valid-border-color: #6b7d3f;
+    --bs-form-invalid-color: #a04a3a;
+    --bs-form-invalid-border-color: #a04a3a;
+    
+    /* Focus states */
+    --bs-focus-ring-color: rgba(156, 109, 61, 0.25);
+    --bs-focus-ring-rgb: 156, 109, 61;
+    
+    /* ========================================
+     * Components
+     * ======================================== */
+    
+    /* Cards */
+    --bs-card-bg: #fdfcfa;
+    --bs-card-border-color: #d4c7b0;
+    --bs-card-cap-bg: #ebe5d8;
+    
+    /* Tables */
+    --bs-table-bg: transparent;
+    --bs-table-accent-bg: transparent;
+    --bs-table-striped-bg: rgba(139, 119, 88, 0.05);
+    --bs-table-striped-color: #3d2f1f;
+    --bs-table-active-bg: rgba(139, 119, 88, 0.1);
+    --bs-table-active-color: #3d2f1f;
+    --bs-table-hover-bg: rgba(139, 119, 88, 0.075);
+    --bs-table-hover-color: #3d2f1f;
+    
+    /* Buttons */
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-opacity: 0.5;
+    
+    /* Dropdowns */
+    --bs-dropdown-bg: #fdfcfa;
+    --bs-dropdown-border-color: #d4c7b0;
+    --bs-dropdown-divider-bg: #e3dac9;
+    --bs-dropdown-link-color: #3d2f1f;
+    --bs-dropdown-link-hover-color: #2d2115;
+    --bs-dropdown-link-hover-bg: #ebe5d8;
+    --bs-dropdown-link-active-color: #fdfcfa;
+    --bs-dropdown-link-active-bg: #9c6d3d;
+    
+    /* Modals */
+    --bs-modal-bg: #fdfcfa;
+    --bs-modal-border-color: #d4c7b0;
+    --bs-modal-header-border-color: #e3dac9;
+    --bs-modal-footer-border-color: #e3dac9;
+    
+    /* Navs and Navbar */
+    --bs-nav-link-color: #3d2f1f;
+    --bs-nav-link-hover-color: #8b5a2b;
+    --bs-navbar-color: #3d2f1f;
+    --bs-navbar-hover-color: #8b5a2b;
+    --bs-navbar-active-color: #8b5a2b;
+    --bs-navbar-brand-color: #2d2115;
+    --bs-navbar-brand-hover-color: #2d2115;
+    
+    /* Badges */
+    --bs-badge-color: #fff;
+    
+    /* Alerts */
+    --bs-alert-bg: transparent;
+    --bs-alert-border-color: transparent;
+    
+    /* Breadcrumbs */
+    --bs-breadcrumb-divider-color: rgba(61, 47, 31, 0.5);
+    --bs-breadcrumb-active-color: rgba(61, 47, 31, 0.75);
+    
+    /* Pagination */
+    --bs-pagination-bg: #fdfcfa;
+    --bs-pagination-border-color: #d4c7b0;
+    --bs-pagination-hover-color: #6d4522;
+    --bs-pagination-hover-bg: #ebe5d8;
+    --bs-pagination-hover-border-color: #d4c7b0;
+    --bs-pagination-focus-color: #6d4522;
+    --bs-pagination-focus-bg: #e3dac9;
+    --bs-pagination-active-bg: #9c6d3d;
+    --bs-pagination-active-border-color: #9c6d3d;
+    --bs-pagination-disabled-color: rgba(61, 47, 31, 0.5);
+    --bs-pagination-disabled-bg: #fdfcfa;
+    --bs-pagination-disabled-border-color: #d4c7b0;
+    
+    /* List groups */
+    --bs-list-group-bg: #fdfcfa;
+    --bs-list-group-border-color: #d4c7b0;
+    --bs-list-group-hover-bg: #ebe5d8;
+    --bs-list-group-active-color: #fdfcfa;
+    --bs-list-group-active-bg: #9c6d3d;
+    --bs-list-group-active-border-color: #9c6d3d;
+    --bs-list-group-disabled-color: rgba(61, 47, 31, 0.5);
+    
+    /* Toasts */
+    --bs-toast-bg: #fdfcfa;
+    --bs-toast-border-color: rgba(139, 119, 88, 0.15);
+    --bs-toast-header-bg: #ebe5d8;
+    --bs-toast-header-border-color: rgba(139, 119, 88, 0.1);
+    
+    /* Progress bars */
+    --bs-progress-bg: #e3dac9;
+    
+    /* Tooltips and Popovers */
+    --bs-tooltip-bg: #3d2f1f;
+    --bs-tooltip-color: #f5f1e8;
+    --bs-popover-bg: #fdfcfa;
+    --bs-popover-border-color: #d4c7b0;
+    --bs-popover-header-bg: #ebe5d8;
+    
+    /* Code */
+    --bs-code-color: #8b5a2b;
+    --bs-pre-color: #3d2f1f;
+    --bs-kbd-color: #fdfcfa;
+    --bs-kbd-bg: #3d2f1f;
+}
+
+/* ========================================
+ * Additional Component Refinements
+ * ======================================== */
+
+/* Ensure proper text contrast in primary buttons */
+[data-bs-theme="sepia"] .btn-primary {
+    color: #fff;
+    border-color: #9c6d3d;
+}
+
+[data-bs-theme="sepia"] .btn-primary:hover,
+[data-bs-theme="sepia"] .btn-primary:focus {
+    background-color: #8b5a2b;
+    border-color: #8b5a2b;
+    color: #fff;
+}
+
+/* Secondary buttons */
+[data-bs-theme="sepia"] .btn-secondary {
+    color: #fff;
+}
+
+/* Outline button variants */
+[data-bs-theme="sepia"] .btn-outline-primary {
+    color: #9c6d3d;
+    border-color: #9c6d3d;
+}
+
+[data-bs-theme="sepia"] .btn-outline-primary:hover {
+    background-color: #9c6d3d;
+    color: #fff;
+}
+
+[data-bs-theme="sepia"] .btn-outline-secondary {
+    color: #7a6854;
+    border-color: #7a6854;
+}
+
+[data-bs-theme="sepia"] .btn-outline-secondary:hover {
+    background-color: #7a6854;
+    color: #fff;
+}
+
+[data-bs-theme="sepia"] .btn-outline-success {
+    color: #6b7d3f;
+    border-color: #6b7d3f;
+}
+
+[data-bs-theme="sepia"] .btn-outline-success:hover {
+    background-color: #6b7d3f;
+    color: #fff;
+}
+
+[data-bs-theme="sepia"] .btn-outline-danger {
+    color: #a04a3a;
+    border-color: #a04a3a;
+}
+
+[data-bs-theme="sepia"] .btn-outline-danger:hover {
+    background-color: #a04a3a;
+    color: #fff;
+}
+
+/* Table enhancements */
+[data-bs-theme="sepia"] .table {
+    --bs-table-color: #3d2f1f;
+    --bs-table-border-color: #d4c7b0;
+}
+
+[data-bs-theme="sepia"] .table-dark {
+    --bs-table-bg: #3d2f1f;
+    --bs-table-color: #f5f1e8;
+    --bs-table-border-color: #5a4a3a;
+}
+
+/* Form controls focus state */
+[data-bs-theme="sepia"] .form-control:focus,
+[data-bs-theme="sepia"] .form-select:focus {
+    border-color: #9c6d3d;
+    box-shadow: 0 0 0 0.25rem rgba(156, 109, 61, 0.25);
+}
+
+/* Navbar styling */
+[data-bs-theme="sepia"] .navbar {
+    background-color: #ebe5d8;
+    border-color: #d4c7b0;
+}
+
+[data-bs-theme="sepia"] .navbar-brand {
+    color: #2d2115;
+    font-weight: 600;
+}
+
+/* Alert variants */
+[data-bs-theme="sepia"] .alert-success {
+    background-color: #e3e8d4;
+    border-color: #c9d4af;
+    color: #4a5829;
+}
+
+[data-bs-theme="sepia"] .alert-info {
+    background-color: #dde5e9;
+    border-color: #bfcdd4;
+    color: #3d5159;
+}
+
+[data-bs-theme="sepia"] .alert-warning {
+    background-color: #f5ecd4;
+    border-color: #e3d4a8;
+    color: #7a5808;
+}
+
+[data-bs-theme="sepia"] .alert-danger {
+    background-color: #f0dcd8;
+    border-color: #d9bfb8;
+    color: #6d3227;
+}
+
+/* Badge improvements */
+[data-bs-theme="sepia"] .badge {
+    font-weight: 600;
+}
+
+/* Card shadow for depth */
+[data-bs-theme="sepia"] .card {
+    box-shadow: 0 2px 4px rgba(61, 47, 31, 0.08);
+}
+
+[data-bs-theme="sepia"] .card:hover {
+    box-shadow: 0 4px 8px rgba(61, 47, 31, 0.12);
+}
+
+/* Modal backdrop */
+[data-bs-theme="sepia"] .modal-backdrop {
+    background-color: rgba(61, 47, 31, 0.5);
+}
+
+/* Dropdown shadow */
+[data-bs-theme="sepia"] .dropdown-menu {
+    box-shadow: 0 4px 12px rgba(61, 47, 31, 0.15);
+}
+
+/* Footer styling */
+[data-bs-theme="sepia"] .footer {
+    background-color: #ebe5d8;
+    border-top: 1px solid #d4c7b0;
+}
+
+/* Ensure text in dark components remains readable */
+[data-bs-theme="sepia"] .bg-dark {
+    background-color: #3d2f1f !important;
+    color: #f5f1e8 !important;
+}
+
+[data-bs-theme="sepia"] .text-muted {
+    color: rgba(61, 47, 31, 0.65) !important;
+}
+
+/* Spinner colors */
+[data-bs-theme="sepia"] .spinner-border,
+[data-bs-theme="sepia"] .spinner-grow {
+    color: #9c6d3d;
+}
