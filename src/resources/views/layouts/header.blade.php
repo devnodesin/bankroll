@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+<nav class="navbar navbar-expand-lg border-bottom">
     <div class="container-fluid">
         <span class="navbar-brand mb-0 h1">{{ config('app.name') }}</span>
         

@@ -17,7 +17,7 @@
      * ======================================== */
     
     /* Base Colors - Warm beige/brown tones */
-    --bs-body-bg: #f5f1e8;              /* Warm beige background */
+    --bs-body-bg: #eee0c8;              /* Warm beige background */
     --bs-body-color: #3d2f1f;           /* Deep brown text (contrast ratio: 10.5:1) */
     --bs-body-color-rgb: 61, 47, 31;
     
