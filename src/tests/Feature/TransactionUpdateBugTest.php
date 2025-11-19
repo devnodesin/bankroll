@@ -13,7 +13,9 @@ class TransactionUpdateBugTest extends TestCase
     use RefreshDatabase;
 
     protected $user;
+
     protected $category;
+
     protected $transaction;
 
     protected function setUp(): void

@@ -17,7 +17,7 @@ class HomeController extends Controller
     {
         // Get banks from banks table, fallback to transaction data if none exist
         $banks = \App\Models\Bank::orderBy('name')->pluck('name');
-        
+
         if ($banks->isEmpty()) {
             $banks = Transaction::select('bank_name')
                 ->distinct()
@@ -95,11 +95,11 @@ class HomeController extends Controller
 
         // Only update fields that are present in the request
         $updateData = [];
-        
+
         if ($request->has('category_id')) {
             $updateData['category_id'] = $request->category_id;
         }
-        
+
         if ($request->has('notes')) {
             $updateData['notes'] = $request->notes;
         }
