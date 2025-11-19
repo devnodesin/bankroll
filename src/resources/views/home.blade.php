@@ -847,11 +847,11 @@
         }
         
         if (categoryName.startsWith('EXPENSE:')) {
-            return 'bg-danger-subtle text-dark';
+            return 'text-bg-danger';
         } else if (categoryName.startsWith('INCOME:')) {
-            return 'bg-success-subtle text-dark';
+            return 'text-bg-success';
         } else if (categoryName.startsWith('TRANSFER:')) {
-            return 'bg-primary-subtle text-dark';
+            return 'text-bg-primary';
         }
         
         return '';
