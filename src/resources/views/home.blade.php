@@ -840,6 +840,23 @@
         }
     });
 
+    // Get category background color class based on prefix
+    function getCategoryColorClass(categoryName) {
+        if (!categoryName || categoryName === 'None') {
+            return '';
+        }
+        
+        if (categoryName.startsWith('EXPENSE:')) {
+            return 'bg-danger-subtle text-dark';
+        } else if (categoryName.startsWith('INCOME:')) {
+            return 'bg-success-subtle text-dark';
+        } else if (categoryName.startsWith('TRANSFER:')) {
+            return 'bg-primary-subtle text-dark';
+        }
+        
+        return '';
+    }
+
     // Display transactions in table
     function displayTransactions(transactions) {
         transactionsTableBody.innerHTML = '';
@@ -850,13 +867,14 @@
             const row = document.createElement('tr');
             const selectedCategory = categories.find(cat => cat.id == transaction.category_id);
             const selectedText = selectedCategory ? selectedCategory.name : 'None';
+            const colorClass = getCategoryColorClass(selectedText);
             
             row.innerHTML = `
                 <td>${formatDate(transaction.date)}</td>
                 <td>${transaction.description}</td>
                 <td>
                     <div class="dropdown searchable-dropdown" data-transaction-id="${transaction.id}">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100 text-start category-display" 
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100 text-start category-display ${colorClass}" 
                                 type="button" 
                                 data-bs-toggle="dropdown" 
                                 data-bs-auto-close="outside"
@@ -1006,6 +1024,16 @@
                     // Update display
                     displayBtn.textContent = text;
                     displayBtn.dataset.selectedValue = value;
+                    
+                    // Remove existing color classes
+                    displayBtn.classList.remove('bg-danger-subtle', 'bg-success-subtle', 'bg-primary-subtle', 'text-dark');
+                    
+                    // Add appropriate color class based on category
+                    const colorClass = getCategoryColorClass(text);
+                    if (colorClass) {
+                        const classes = colorClass.split(' ');
+                        displayBtn.classList.add(...classes);
+                    }
 
                     // Remove active class from all options
                     options.forEach(opt => opt.classList.remove('active'));
