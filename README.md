@@ -25,6 +25,27 @@ A clean, minimal Laravel 12.x web application for importing, classifying, and ex
 
 ## Installation
 
+### Option 1: Docker Deployment (Recommended for Production) 🐳
+
+The easiest way to deploy Bankroll is using Docker with FrankenPHP:
+
+```bash
+# Clone the repository
+git clone https://github.com/devnodesin/bankroll.git
+cd bankroll
+
+# Run automated deployment
+./deploy.sh
+```
+
+Access the application at `http://localhost:8000`
+
+📖 **Documentation:**
+- **Quick Start**: [DOCKER-QUICKSTART.md](DOCKER-QUICKSTART.md) - Get running in 5 minutes
+- **Complete Guide**: [DEPLOYMENT.md](DEPLOYMENT.md) - Full deployment documentation
+
+### Option 2: Local Development Setup
+
 1. **Clone the repository**
 
 ```bash
@@ -53,13 +74,13 @@ php artisan db:seed
 php artisan user:add admin password123
 ```
 
-6. **Start development server**
+3. **Start development server**
 
 ```bash
 php artisan serve
 ```
 
-7. **Access the application**
+4. **Access the application**
 
 ```
 http://localhost:8000
