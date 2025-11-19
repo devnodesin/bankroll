@@ -554,6 +554,25 @@
     // Load banks when modal is opened
     banksModal.addEventListener('show.bs.modal', loadBanks);
 
+    // Reload transactions and dropdowns when modals are closed
+    categoriesModal.addEventListener('hidden.bs.modal', async () => {
+        // Refresh the local categories cache
+        await refreshCategoriesDropdown();
+        // If transactions are visible, reload them to update category dropdowns
+        if (bankFilter.value && yearFilter.value && monthFilter.value) {
+            loadBtn.click();
+        }
+    });
+
+    banksModal.addEventListener('hidden.bs.modal', async () => {
+        // First, refresh the bank dropdown to reflect any changes
+        await refreshBankDropdown();
+        // If a valid set of filters is still selected, reload the transactions
+        if (bankFilter.value && yearFilter.value && monthFilter.value) {
+            loadBtn.click();
+        }
+    });
+
     async function loadBanks() {
         try {
             const response = await fetch('{{ route('banks.index') }}', {
@@ -1293,18 +1312,19 @@
                 importSuccess.classList.remove('d-none');
                 importForm.reset();
                 
-                setTimeout(async () => {
-                    bootstrap.Modal.getInstance(importModal).hide();
-                    importSuccess.classList.add('d-none');
-                    
-                    // Refresh year and month dropdowns
-                    await refreshYearMonthDropdowns();
-                    
-                    // Reload transactions if filters are set
-                    if (bankFilter.value && yearFilter.value && monthFilter.value) {
-                        loadBtn.click();
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(importModal);
+                    if (modal) {
+                        // Add a one-time event listener to reload the page after the modal is hidden
+                        importModal.addEventListener('hidden.bs.modal', () => {
+                            location.reload();
+                        }, { once: true });
+                        modal.hide();
+                    } else {
+                        // Fallback if modal instance isn't found
+                        location.reload();
                     }
-                }, 2000);
+                }, 1500); // Wait 1.5 seconds to allow user to read success message
             } else {
                 let errorMessage = data.message;
                 if (data.errors && Array.isArray(data.errors)) {
