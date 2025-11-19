@@ -14,8 +14,8 @@ services:
     
     # Persistent volumes for data and logs
     volumes:
-      - ./data/database.sqlite:/bankroll/data/database.sqlite  # SQLite database
-      - ./data/logs:/bankroll/storage/logs                     # Application logs
+      - ./build/data:/bankroll/data                     # Database directory
+      - ./build/logs:/bankroll/storage/logs             # Application logs
     
     # Application configuration
     environment:
@@ -23,7 +23,8 @@ services:
       APP_ENV: "production"                                     # production|local|development
       APP_DEBUG: "false"                                        # Set to "true" only for debugging
       APP_URL: "http://localhost:8000"                          # Change to your domain in production
-      APP_KEY: base64:zRuC51slKq8yusnJx3iZ7LDh0NijEf7x1sxITkQ0Fe4=  # Generate with: php artisan key:generate --show
+      ASSET_URL: "http://localhost:8000"                        # Asset URL (match APP_URL)
+      APP_KEY: "base64:zRuC51slKq8yusnJx3iZ7LDh0NijEf7x1sxITkQ0Fe4="  # Generate with: php artisan key:generate --show
       
       # Currency symbol (₹, $, €, £, ¥, etc.)
       CURRENCY_SYMBOL: "₹"
@@ -31,6 +32,10 @@ services:
       # Database configuration (SQLite)
       DB_CONNECTION: "sqlite"
       DB_DATABASE: "/bankroll/data/database.sqlite"
+      
+      # Proxy configuration (for reverse proxy setups)
+      TRUSTED_PROXIES: "*"                                      # Trust all proxies
+      FORCE_HTTPS: "false"                                      # Set to "true" behind HTTPS proxy
     
     # Health check to verify container is running properly
     healthcheck:
