@@ -10,11 +10,7 @@
   <a href="https://github.com/pre-commit/pre-commit"><img src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white" alt="pre-commit"/></a>
 </p>
 
-<p align="center">
-
-Built with ❤️ by **[Devnodes.in](https://devnodes.in)**
-
-</p>
+<p align="center">Built with ❤️ by <a href="(https://devnodes.in">Devnodes.in</a></p>
 
 
 <div align="center">
