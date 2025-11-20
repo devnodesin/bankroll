@@ -611,8 +611,12 @@
 
     // Reusable function to refresh transactions table
     async function refreshTransactions() {
-        if (bankFilter.value && yearFilter.value && monthFilter.value) {
-            loadBtn.click();
+        try {
+            if (bankFilter.value && yearFilter.value && monthFilter.value) {
+                loadBtn.click();
+            }
+        } catch (error) {
+            console.error('Failed to refresh transactions:', error);
         }
     }
 
