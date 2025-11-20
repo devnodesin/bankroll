@@ -2,8 +2,6 @@
 <h1 align="center">Bankroll</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/devnodesin/bankroll?logo=github&logoColor=white" alt="GitHub release"/>
-  <img src="https://img.shields.io/github/workflow/status/devnodesin/bankroll/laravel.yml?branch=main" alt="Build status"/>
   <img src="https://img.shields.io/github/languages/top/devnodesin/bankroll?logo=php&logoColor=white" alt="Top language"/>
   <img src="https://img.shields.io/github/license/devnodesin/bankroll?logo=github&logoColor=white" alt="License"/>
   <img src="https://img.shields.io/github/issues/devnodesin/bankroll?logo=github&logoColor=white" alt="Issues"/>
@@ -12,14 +10,20 @@
   <a href="https://github.com/pre-commit/pre-commit"><img src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white" alt="pre-commit"/></a>
 </p>
 
-# Bankroll - Bank Transaction Management Software
+<p align="center">
+Built with ❤️ by **[Devnodes.in](https://devnodes.in)**
+</p>
+
+
+<div align="center">
+
+**Bankroll** - Bank Transaction Management Software
 
 A clean, minimal Laravel 12.x web application for importing, classifying, and exporting bank transactions with strict data integrity principles.
 
-Built with ❤️ by **[Devnodes.in](https://devnodes.in)** | [MIT License](LICENSE.md)
+</div>
 
-**Repository:** https://github.com/devnodesin/bankroll  
-**Issues:** https://github.com/devnodesin/bankroll/issues
+
 
 ## ✨ Key Features
 
