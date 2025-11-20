@@ -18,6 +18,16 @@ namespace App\Services\Parsers;
  */
 class CreditDebitTransactionParser extends BaseTransactionParser
 {
+    /**
+     * Supported credit transaction indicators
+     */
+    public const CREDIT_INDICATORS = ['CR', 'CREDIT', 'C', 'CREDITED'];
+    
+    /**
+     * Supported debit transaction indicators
+     */
+    public const DEBIT_INDICATORS = ['DR', 'DEBIT', 'D', 'DEBITED'];
+    
     public function getIdentifier(): string
     {
         return 'credit-debit';
@@ -147,8 +157,7 @@ class CreditDebitTransactionParser extends BaseTransactionParser
      */
     private function isCredit(string $type): bool
     {
-        $creditIndicators = ['CR', 'CREDIT', 'C', 'CREDITED'];
-        return in_array($type, $creditIndicators);
+        return in_array($type, self::CREDIT_INDICATORS);
     }
 
     /**
@@ -159,7 +168,22 @@ class CreditDebitTransactionParser extends BaseTransactionParser
      */
     private function isDebit(string $type): bool
     {
-        $debitIndicators = ['DR', 'DEBIT', 'D', 'DEBITED'];
-        return in_array($type, $debitIndicators);
+        return in_array($type, self::DEBIT_INDICATORS);
+    }
+
+    /**
+     * Get field configuration for UI rendering
+     * 
+     * @return array Array of field configurations
+     */
+    public function getFieldConfiguration(): array
+    {
+        return [
+            ['key' => 'date', 'label' => 'Date', 'required' => true, 'col' => 'col-md-6'],
+            ['key' => 'description', 'label' => 'Description', 'required' => true, 'col' => 'col-md-6'],
+            ['key' => 'amount', 'label' => 'Amount', 'required' => true, 'col' => 'col-md-4'],
+            ['key' => 'type', 'label' => 'Type (CR/DR)', 'required' => true, 'col' => 'col-md-4'],
+            ['key' => 'balance', 'label' => 'Balance', 'required' => true, 'col' => 'col-md-4'],
+        ];
     }
 }

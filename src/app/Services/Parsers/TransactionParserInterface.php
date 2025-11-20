@@ -66,4 +66,17 @@ interface TransactionParserInterface
      * @return array Array of missing required field names (empty if all present)
      */
     public function validateMappings(array $columnMappings): array;
+
+    /**
+     * Get field configuration for UI rendering
+     * 
+     * Returns an array of field configurations with metadata for each field:
+     * - key: Field identifier (e.g., 'date', 'description')
+     * - label: Human-readable label for UI
+     * - required: Whether the field is required (boolean)
+     * - col: Bootstrap column class (e.g., 'col-md-6')
+     * 
+     * @return array Array of field configurations
+     */
+    public function getFieldConfiguration(): array;
 }

@@ -1277,25 +1277,20 @@
         const container = document.getElementById('columnMappingsContainer');
         container.innerHTML = '';
         
-        // Define field configurations for each parser type
-        const parserFields = {
-            'standard': [
-                { key: 'date', label: 'Date', required: true, col: 'col-md-6' },
-                { key: 'description', label: 'Description', required: true, col: 'col-md-6' },
-                { key: 'withdraw', label: 'Withdraw', required: false, col: 'col-md-4' },
-                { key: 'deposit', label: 'Deposit', required: false, col: 'col-md-4' },
-                { key: 'balance', label: 'Balance', required: true, col: 'col-md-4' }
-            ],
-            'credit-debit': [
-                { key: 'date', label: 'Date', required: true, col: 'col-md-6' },
-                { key: 'description', label: 'Description', required: true, col: 'col-md-6' },
-                { key: 'amount', label: 'Amount', required: true, col: 'col-md-4' },
-                { key: 'type', label: 'Type (CR/DR)', required: true, col: 'col-md-4' },
-                { key: 'balance', label: 'Balance', required: true, col: 'col-md-4' }
-            ]
-        };
+        // Get field configurations from the backend data
+        let fields = [];
+        if (data.available_parsers) {
+            const selectedParser = data.available_parsers.find(p => p.id === parserType);
+            if (selectedParser && selectedParser.fields) {
+                fields = selectedParser.fields;
+            }
+        }
         
-        const fields = parserFields[parserType] || parserFields['standard'];
+        // Fallback to empty array if no configuration found
+        if (fields.length === 0) {
+            console.warn('No field configuration found for parser:', parserType);
+            return;
+        }
         
         fields.forEach(field => {
             const div = document.createElement('div');
@@ -1392,13 +1387,25 @@
             columnMappings[fieldName] = value !== '' ? parseInt(value) : null;
         });
         
-        // Basic validation - check that at least some required fields are mapped
-        const hasRequiredMappings = columnMappings.date !== null && 
-                                    columnMappings.description !== null && 
-                                    columnMappings.balance !== null;
+        // Get required fields from the selected parser's configuration
+        let requiredFields = [];
+        if (previewData && previewData.available_parsers) {
+            const selectedParser = previewData.available_parsers.find(p => p.id === parserType);
+            if (selectedParser && selectedParser.required_fields) {
+                requiredFields = selectedParser.required_fields;
+            }
+        }
         
-        if (!hasRequiredMappings) {
-            importErrors.textContent = 'Please map all required fields (marked with *)';
+        // Validate that all required fields are mapped
+        const missingFields = [];
+        requiredFields.forEach(field => {
+            if (columnMappings[field] === null || columnMappings[field] === undefined) {
+                missingFields.push(field);
+            }
+        });
+        
+        if (missingFields.length > 0) {
+            importErrors.textContent = 'Please map all required fields (marked with *): ' + missingFields.join(', ');
             importErrors.classList.remove('d-none');
             importButton.disabled = false;
             importButton.innerHTML = '<i class="bi bi-upload"></i> Import';

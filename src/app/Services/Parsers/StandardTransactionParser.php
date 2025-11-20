@@ -120,4 +120,20 @@ class StandardTransactionParser extends BaseTransactionParser
             'updated_at' => now(),
         ];
     }
+
+    /**
+     * Get field configuration for UI rendering
+     * 
+     * @return array Array of field configurations
+     */
+    public function getFieldConfiguration(): array
+    {
+        return [
+            ['key' => 'date', 'label' => 'Date', 'required' => true, 'col' => 'col-md-6'],
+            ['key' => 'description', 'label' => 'Description', 'required' => true, 'col' => 'col-md-6'],
+            ['key' => 'withdraw', 'label' => 'Withdraw', 'required' => false, 'col' => 'col-md-4'],
+            ['key' => 'deposit', 'label' => 'Deposit', 'required' => false, 'col' => 'col-md-4'],
+            ['key' => 'balance', 'label' => 'Balance', 'required' => true, 'col' => 'col-md-4'],
+        ];
+    }
 }

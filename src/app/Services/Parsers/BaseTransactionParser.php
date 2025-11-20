@@ -143,7 +143,7 @@ abstract class BaseTransactionParser implements TransactionParserInterface
         $headerLower = strtolower(trim($header));
         
         foreach ($patterns as $pattern) {
-            if ($headerLower === $pattern || strpos($headerLower, $pattern) !== false) {
+            if ($headerLower === $pattern || str_contains($headerLower, $pattern)) {
                 return true;
             }
         }

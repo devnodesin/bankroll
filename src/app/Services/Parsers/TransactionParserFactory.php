@@ -66,7 +66,7 @@ class TransactionParserFactory
     /**
      * Get parser information for display (e.g., in UI dropdown)
      * 
-     * @return array Array of parser info: [['id' => '...', 'name' => '...', 'description' => '...'], ...]
+     * @return array Array of parser info: [['id' => '...', 'name' => '...', 'description' => '...', 'fields' => [...]], ...]
      */
     public function getParserOptions(): array
     {
@@ -76,6 +76,8 @@ class TransactionParserFactory
                 'id' => $parser->getIdentifier(),
                 'name' => $parser->getName(),
                 'description' => $parser->getDescription(),
+                'fields' => $parser->getFieldConfiguration(),
+                'required_fields' => $parser->getRequiredFields(),
             ];
         }
         return $options;
