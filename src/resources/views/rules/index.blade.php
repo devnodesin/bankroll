@@ -181,6 +181,7 @@
     function showAlert(message, type = 'success') {
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.style.whiteSpace = 'pre-line'; // Preserve line breaks
         
         // Create message span and set textContent to prevent XSS
         const messageSpan = document.createElement('span');
@@ -244,7 +245,7 @@
                 }, 1500);
             } else {
                 const errors = result.errors || {};
-                const errorMessages = Object.values(errors).flat().join('<br>');
+                const errorMessages = Object.values(errors).flat().join('\n');
                 showAlert(errorMessages || result.message || 'Failed to create rule', 'danger');
             }
         } catch (error) {
@@ -326,7 +327,7 @@
                     }, 1500);
                 } else {
                     const errors = result.errors || {};
-                    const errorMessages = Object.values(errors).flat().join('<br>');
+                    const errorMessages = Object.values(errors).flat().join('\n');
                     showAlert(errorMessages || result.message || 'Failed to update rule', 'danger');
                 }
             } catch (error) {
