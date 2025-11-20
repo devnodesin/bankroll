@@ -6,7 +6,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <h2><i class="bi bi-funnel"></i> Transaction Rules</h2>
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('home') }}" class="btn btn-primary">
                     <i class="bi bi-arrow-left"></i> Back to Home
                 </a>
             </div>
@@ -27,10 +27,9 @@
                     <form id="createRuleForm">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label for="description_match" class="form-label">Description Match <span class="text-danger">*</span></label>
+                                <label for="description_match" class="form-label">Description Match (containing this text)<span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="description_match" name="description_match" 
                                        placeholder="e.g., AMAZON, ATM, SALARY" required>
-                                <small class="text-muted">Transactions containing this text will match this rule</small>
                             </div>
                             <div class="col-md-3">
                                 <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
