@@ -30,4 +30,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/banks', [App\Http\Controllers\BankController::class, 'index'])->name('banks.index');
     Route::post('/banks', [App\Http\Controllers\BankController::class, 'store'])->name('banks.store');
     Route::delete('/banks/{bank}', [App\Http\Controllers\BankController::class, 'destroy'])->name('banks.destroy');
+    
+    // Rule management routes
+    Route::get('/rules', [App\Http\Controllers\RuleController::class, 'index'])->name('rules.index');
+    Route::post('/rules', [App\Http\Controllers\RuleController::class, 'store'])->name('rules.store');
+    Route::put('/rules/{rule}', [App\Http\Controllers\RuleController::class, 'update'])->name('rules.update');
+    Route::delete('/rules/{rule}', [App\Http\Controllers\RuleController::class, 'destroy'])->name('rules.destroy');
+    Route::post('/rules/apply', [App\Http\Controllers\RuleController::class, 'applyRules'])->name('rules.apply');
 });

@@ -18,6 +18,11 @@
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#categoriesModal">
                     <i class="bi bi-tags"></i> Categories
                 </button>
+                
+                <!-- Manage Rules Button -->
+                <a href="{{ route('rules.index') }}" class="btn btn-outline-info">
+                    <i class="bi bi-funnel"></i> Rules
+                </a>
             @endauth
             
             <!-- Theme Switcher Button -->
