@@ -593,23 +593,38 @@
     // Load banks when modal is opened
     banksModal.addEventListener('show.bs.modal', loadBanks);
 
-    // Reload transactions and dropdowns when modals are closed
-    categoriesModal.addEventListener('hidden.bs.modal', async () => {
-        // Refresh the local categories cache
-        await refreshCategoriesDropdown();
-        // If transactions are visible, reload them to update category dropdowns
+    // Reusable function to refresh filter dropdowns
+    async function refreshFilters() {
+        try {
+            // Refresh bank dropdown
+            await refreshBankDropdown();
+            // Refresh categories cache
+            await refreshCategoriesDropdown();
+            // Update month dropdown if bank and year are selected
+            if (bankFilter.value && yearFilter.value) {
+                await updateMonthDropdown();
+            }
+        } catch (error) {
+            console.error('Failed to refresh filters:', error);
+        }
+    }
+
+    // Reusable function to refresh transactions table
+    async function refreshTransactions() {
         if (bankFilter.value && yearFilter.value && monthFilter.value) {
             loadBtn.click();
         }
+    }
+
+    // Reload transactions and dropdowns when modals are closed
+    categoriesModal.addEventListener('hidden.bs.modal', async () => {
+        await refreshFilters();
+        await refreshTransactions();
     });
 
     banksModal.addEventListener('hidden.bs.modal', async () => {
-        // First, refresh the bank dropdown to reflect any changes
-        await refreshBankDropdown();
-        // If a valid set of filters is still selected, reload the transactions
-        if (bankFilter.value && yearFilter.value && monthFilter.value) {
-            loadBtn.click();
-        }
+        await refreshFilters();
+        await refreshTransactions();
     });
 
     async function loadBanks() {
@@ -1142,12 +1157,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             document.body.appendChild(alert);
-            setTimeout(() => {
+            setTimeout(async () => {
                 alert.remove();
                 // Refresh the transactions list to show saved changes
-                if (bankFilter.value && yearFilter.value && monthFilter.value) {
-                    loadBtn.click();
-                }
+                await refreshTransactions();
             }, 1500);
         } else {
             alert('Some changes failed to save. Please try again.');
@@ -1584,10 +1597,11 @@
                     applyRulesSuccess.textContent = result.message;
                     applyRulesSuccess.classList.remove('d-none');
                     
-                    // Reload transactions to show updated categories
-                    setTimeout(() => {
+                    // Reload transactions and filters to show updated categories
+                    setTimeout(async () => {
                         applyRulesModal.hide();
-                        loadTransactionsData();
+                        await refreshFilters();
+                        await refreshTransactions();
                     }, 2000);
                 } else {
                     applyRulesErrors.textContent = result.message || 'Failed to apply rules';
