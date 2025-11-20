@@ -10,9 +10,6 @@
   <a href="https://github.com/pre-commit/pre-commit"><img src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white" alt="pre-commit"/></a>
 </p>
 
-<p align="center">Built with ❤️ by <a href="(https://devnodes.in">Devnodes.in</a></p>
-
-
 <div align="center">
 
 **Bankroll** - Bank Transaction Management Software
@@ -84,3 +81,4 @@ php artisan user:add username password [--email=user@example.com]
 php artisan user:remove username
 php artisan user:list
 ```
+Built with ❤️ by **[Devnodes.in](https://devnodes.in)**
