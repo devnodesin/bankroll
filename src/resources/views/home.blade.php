@@ -124,7 +124,10 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">Transactions</h5>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-success" id="saveChanges" style="display: none;">
+                            <button type="button" class="btn btn-primary" id="applyRules" style="display: none;">
+                                <i class="bi bi-funnel"></i> Apply Rules
+                            </button>
+                            <button type="button" class="btn btn-success ms-2" id="saveChanges" style="display: none;">
                                 <i class="bi bi-save"></i> Save Changes
                             </button>
                             <button type="button" class="btn btn-info dropdown-toggle ms-2" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="display: none;">
@@ -355,6 +358,48 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Apply Rules Modal -->
+    <div class="modal fade" id="applyRulesModal" tabindex="-1" aria-labelledby="applyRulesModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="applyRulesModalLabel">Apply Rules to Transactions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Rules will be applied to all transactions in the current view (selected bank, year, and month).
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">How should rules handle existing categories?</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="applyMode" id="fillBlankOnly" value="false" checked>
+                            <label class="form-check-label" for="fillBlankOnly">
+                                <strong>Fill blank only</strong> - Only apply rules to transactions without a category
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="applyMode" id="overwriteAll" value="true">
+                            <label class="form-check-label" for="overwriteAll">
+                                <strong>Overwrite all</strong> - Replace existing categories with rule matches
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="applyRulesErrors" class="alert alert-danger d-none"></div>
+                    <div id="applyRulesSuccess" class="alert alert-success d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmApplyRules">
+                        <i class="bi bi-check-circle"></i> Apply Rules
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -824,8 +869,14 @@
                 currentFilters = { bank, year, month };
                 displayTransactions(data.transactions);
                 exportDropdown.style.display = 'block';
+                if (applyRulesBtn) {
+                    applyRulesBtn.style.display = 'block';
+                }
             } else {
                 exportDropdown.style.display = 'none';
+                if (applyRulesBtn) {
+                    applyRulesBtn.style.display = 'none';
+                }
                 noDataMessage.classList.remove('d-none');
             }
         } catch (error) {
@@ -1480,6 +1531,78 @@
         document.getElementById('parserType').value = '';
         document.getElementById('columnMappingsContainer').innerHTML = '';
     });
+
+    // Apply Rules functionality
+    const applyRulesBtn = document.getElementById('applyRules');
+    const applyRulesModal = new bootstrap.Modal(document.getElementById('applyRulesModal'));
+    const confirmApplyRulesBtn = document.getElementById('confirmApplyRules');
+    const applyRulesErrors = document.getElementById('applyRulesErrors');
+    const applyRulesSuccess = document.getElementById('applyRulesSuccess');
+    
+    if (applyRulesBtn) {
+        applyRulesBtn.addEventListener('click', () => {
+            // Clear previous messages
+            applyRulesErrors.classList.add('d-none');
+            applyRulesSuccess.classList.add('d-none');
+            
+            // Show modal
+            applyRulesModal.show();
+        });
+    }
+    
+    if (confirmApplyRulesBtn) {
+        confirmApplyRulesBtn.addEventListener('click', async () => {
+            const overwrite = document.querySelector('input[name="applyMode"]:checked').value === 'true';
+            
+            // Clear previous messages
+            applyRulesErrors.classList.add('d-none');
+            applyRulesSuccess.classList.add('d-none');
+            
+            // Disable button and show loading
+            confirmApplyRulesBtn.disabled = true;
+            confirmApplyRulesBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Applying...';
+            
+            try {
+                const response = await fetch('{{ route('rules.apply') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        bank: currentFilters.bank,
+                        year: currentFilters.year,
+                        month: currentFilters.month,
+                        overwrite: overwrite
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    applyRulesSuccess.textContent = result.message;
+                    applyRulesSuccess.classList.remove('d-none');
+                    
+                    // Reload transactions to show updated categories
+                    setTimeout(() => {
+                        applyRulesModal.hide();
+                        loadTransactionsData();
+                    }, 2000);
+                } else {
+                    applyRulesErrors.textContent = result.message || 'Failed to apply rules';
+                    applyRulesErrors.classList.remove('d-none');
+                }
+            } catch (error) {
+                applyRulesErrors.textContent = 'An error occurred. Please try again.';
+                applyRulesErrors.classList.remove('d-none');
+                console.error('Error:', error);
+            } finally {
+                confirmApplyRulesBtn.disabled = false;
+                confirmApplyRulesBtn.innerHTML = '<i class="bi bi-check-circle"></i> Apply Rules';
+            }
+        });
+    }
 
     // Export handlers
     exportExcel.addEventListener('click', (e) => {
