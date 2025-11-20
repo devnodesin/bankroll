@@ -273,7 +273,9 @@
                                 <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
                                 <div class="form-text">Accepted formats: XLS, XLSX, CSV (Max 5MB)</div>
                                 <div class="form-text mt-2">
-                                    The file should contain columns for: Date, Description, Withdraw, Deposit, and Balance
+                                    <strong>Supported formats:</strong><br>
+                                    • Standard: Date, Description, Withdraw, Deposit, Balance<br>
+                                    • Credit/Debit: Date, Description, Amount, Type (CR/DR), Balance
                                 </div>
                             </div>
                         </div>
@@ -297,6 +299,18 @@
                                 </div>
                             </div>
 
+                            <!-- Parser Type Selection -->
+                            <div class="mb-3">
+                                <label for="parserType" class="form-label">File Format <span class="text-danger">*</span></label>
+                                <select class="form-select" id="parserType" name="parser_type" required>
+                                    <option value="">Select Format</option>
+                                </select>
+                                <div class="form-text" id="parserDescription"></div>
+                                <div class="alert alert-success mt-2" style="font-size: 0.875rem;">
+                                    <i class="bi bi-info-circle"></i> <strong>Note:</strong> No database changes required. All formats map to the same transaction structure internally.
+                                </div>
+                            </div>
+
                             <!-- Date Format Selection -->
                             <div class="mb-3">
                                 <label for="dateFormat" class="form-label">Date Format <span class="text-danger">*</span></label>
@@ -313,27 +327,8 @@
                             <!-- Column Mappings -->
                             <div class="mb-3">
                                 <h6>Column Mappings</h6>
-                                <div class="row g-2">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Date <span class="text-danger">*</span></label>
-                                        <select class="form-select form-select-sm" id="mapDate" required></select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Description <span class="text-danger">*</span></label>
-                                        <select class="form-select form-select-sm" id="mapDescription" required></select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Withdraw</label>
-                                        <select class="form-select form-select-sm" id="mapWithdraw"></select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Deposit</label>
-                                        <select class="form-select form-select-sm" id="mapDeposit"></select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Balance <span class="text-danger">*</span></label>
-                                        <select class="form-select form-select-sm" id="mapBalance" required></select>
-                                    </div>
+                                <div class="row g-2" id="columnMappingsContainer">
+                                    <!-- Will be populated dynamically based on parser type -->
                                 </div>
                                 <div class="form-text mt-2">
                                     <span class="text-danger">*</span> Required fields
@@ -1222,6 +1217,35 @@
         previewButton.classList.add('d-none');
         importButton.classList.remove('d-none');
         
+        // Populate parser type dropdown
+        const parserTypeSelect = document.getElementById('parserType');
+        const parserDescription = document.getElementById('parserDescription');
+        parserTypeSelect.innerHTML = '<option value="">Select Format</option>';
+        
+        if (data.available_parsers) {
+            data.available_parsers.forEach(parser => {
+                const option = document.createElement('option');
+                option.value = parser.id;
+                option.textContent = parser.name;
+                option.dataset.description = parser.description;
+                parserTypeSelect.appendChild(option);
+            });
+        }
+        
+        // Set detected parser as selected
+        if (data.parser_type) {
+            parserTypeSelect.value = data.parser_type;
+            const selectedOption = parserTypeSelect.options[parserTypeSelect.selectedIndex];
+            parserDescription.textContent = selectedOption.dataset.description || '';
+        }
+        
+        // Listen for parser type changes
+        parserTypeSelect.addEventListener('change', () => {
+            const selectedOption = parserTypeSelect.options[parserTypeSelect.selectedIndex];
+            parserDescription.textContent = selectedOption.dataset.description || '';
+            updateColumnMappings(data, parserTypeSelect.value);
+        });
+        
         // Populate preview table
         const previewHeaders = document.getElementById('previewHeaders');
         const previewBody = document.getElementById('previewBody');
@@ -1244,12 +1268,56 @@
             previewBody.appendChild(tr);
         });
         
-        // Populate mapping dropdowns
-        const mappingFields = ['Date', 'Description', 'Withdraw', 'Deposit', 'Balance'];
-        mappingFields.forEach(field => {
-            const select = document.getElementById(`map${field}`);
-            select.innerHTML = '<option value="">-- Select Column --</option>';
+        // Initialize column mappings for the detected parser
+        updateColumnMappings(data, data.parser_type);
+    }
+    
+    // Update column mapping fields based on parser type
+    function updateColumnMappings(data, parserType) {
+        const container = document.getElementById('columnMappingsContainer');
+        container.innerHTML = '';
+        
+        // Get field configurations from the backend data
+        let fields = [];
+        if (data.available_parsers) {
+            const selectedParser = data.available_parsers.find(p => p.id === parserType);
+            if (selectedParser && selectedParser.fields) {
+                fields = selectedParser.fields;
+            }
+        }
+        
+        // Fallback to empty array if no configuration found
+        if (fields.length === 0) {
+            console.warn('No field configuration found for parser:', parserType);
+            return;
+        }
+        
+        fields.forEach(field => {
+            const div = document.createElement('div');
+            div.className = field.col;
             
+            const label = document.createElement('label');
+            label.className = 'form-label';
+            label.textContent = field.label;
+            if (field.required) {
+                label.innerHTML += ' <span class="text-danger">*</span>';
+            }
+            
+            const select = document.createElement('select');
+            select.className = 'form-select form-select-sm';
+            select.id = `map${field.key.charAt(0).toUpperCase() + field.key.slice(1)}`;
+            select.name = `map_${field.key}`;
+            if (field.required) {
+                select.required = true;
+            }
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Select Column --';
+            select.appendChild(defaultOption);
+            
+            // Add column options
             data.headers.forEach((header, index) => {
                 const option = document.createElement('option');
                 option.value = index;
@@ -1258,10 +1326,13 @@
             });
             
             // Set auto-detected mapping
-            const fieldKey = field.toLowerCase();
-            if (data.mappings[fieldKey] !== null && data.mappings[fieldKey] !== undefined) {
-                select.value = data.mappings[fieldKey];
+            if (data.mappings[field.key] !== null && data.mappings[field.key] !== undefined) {
+                select.value = data.mappings[field.key];
             }
+            
+            div.appendChild(label);
+            div.appendChild(select);
+            container.appendChild(div);
         });
     }
 
@@ -1284,6 +1355,16 @@
         importButton.disabled = true;
         importButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importing...';
 
+        // Validate parser type is selected
+        const parserType = document.getElementById('parserType').value;
+        if (!parserType) {
+            importErrors.textContent = 'Please select a file format';
+            importErrors.classList.remove('d-none');
+            importButton.disabled = false;
+            importButton.innerHTML = '<i class="bi bi-upload"></i> Import';
+            return;
+        }
+        
         // Validate date format is selected
         const dateFormat = document.getElementById('dateFormat').value;
         if (!dateFormat) {
@@ -1294,24 +1375,37 @@
             return;
         }
 
-        // Get column mappings
-        const dateVal = document.getElementById('mapDate').value;
-        const descVal = document.getElementById('mapDescription').value;
-        const withdrawVal = document.getElementById('mapWithdraw').value;
-        const depositVal = document.getElementById('mapDeposit').value;
-        const balanceVal = document.getElementById('mapBalance').value;
+        // Get column mappings dynamically from all map fields
+        columnMappings = {};
+        const mappingContainer = document.getElementById('columnMappingsContainer');
+        const mappingSelects = mappingContainer.querySelectorAll('select');
         
-        columnMappings = {
-            date: dateVal !== '' ? parseInt(dateVal) : null,
-            description: descVal !== '' ? parseInt(descVal) : null,
-            withdraw: withdrawVal !== '' ? parseInt(withdrawVal) : null,
-            deposit: depositVal !== '' ? parseInt(depositVal) : null,
-            balance: balanceVal !== '' ? parseInt(balanceVal) : null,
-        };
+        mappingSelects.forEach(select => {
+            // Extract field name from select id (e.g., mapDate -> date)
+            const fieldName = select.id.replace('map', '').toLowerCase();
+            const value = select.value;
+            columnMappings[fieldName] = value !== '' ? parseInt(value) : null;
+        });
         
-        // Validate required mappings
-        if (columnMappings.date === null || columnMappings.description === null || columnMappings.balance === null) {
-            importErrors.textContent = 'Please map all required fields (Date, Description, Balance)';
+        // Get required fields from the selected parser's configuration
+        let requiredFields = [];
+        if (previewData && previewData.available_parsers) {
+            const selectedParser = previewData.available_parsers.find(p => p.id === parserType);
+            if (selectedParser && selectedParser.required_fields) {
+                requiredFields = selectedParser.required_fields;
+            }
+        }
+        
+        // Validate that all required fields are mapped
+        const missingFields = [];
+        requiredFields.forEach(field => {
+            if (columnMappings[field] === null || columnMappings[field] === undefined) {
+                missingFields.push(field);
+            }
+        });
+        
+        if (missingFields.length > 0) {
+            importErrors.textContent = 'Please map all required fields (marked with *): ' + missingFields.join(', ');
             importErrors.classList.remove('d-none');
             importButton.disabled = false;
             importButton.innerHTML = '<i class="bi bi-upload"></i> Import';
@@ -1382,7 +1476,9 @@
         importButton.classList.add('d-none');
         previewData = null;
         columnMappings = {};
-        document.getElementById('dateFormat').value = ''; // Reset date format selection
+        document.getElementById('dateFormat').value = '';
+        document.getElementById('parserType').value = '';
+        document.getElementById('columnMappingsContainer').innerHTML = '';
     });
 
     // Export handlers

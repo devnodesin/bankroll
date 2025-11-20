@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Services\Parsers\TransactionParserFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +12,19 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ImportController extends Controller
 {
+    /**
+     * @var TransactionParserFactory
+     */
+    private TransactionParserFactory $parserFactory;
+
+    /**
+     * Constructor
+     */
+    public function __construct(TransactionParserFactory $parserFactory)
+    {
+        $this->parserFactory = $parserFactory;
+    }
+
     /**
      * Preview file and suggest column mappings
      */
@@ -43,14 +57,18 @@ class ImportController extends Controller
             $headers = array_map('trim', $rows[0]);
             $previewRows = array_slice($rows, 1, 3); // Get first 3 data rows
 
-            // Auto-detect column mappings
-            $mappings = $this->autoDetectColumns($headers);
+            // Auto-detect best parser and column mappings
+            $parser = $this->parserFactory->autoDetectParser($headers);
+            $mappings = $parser->autoDetectColumns($headers);
 
             return response()->json([
                 'success' => true,
                 'headers' => $headers,
                 'preview' => $previewRows,
                 'mappings' => $mappings,
+                'parser_type' => $parser->getIdentifier(),
+                'parser_name' => $parser->getName(),
+                'available_parsers' => $this->parserFactory->getParserOptions(),
             ]);
         } catch (\Exception $e) {
             Log::error('Preview error', ['error' => $e->getMessage()]);
@@ -59,45 +77,6 @@ class ImportController extends Controller
                 'message' => 'Unable to read the file. Please ensure it is a valid Excel or CSV file and try again.'
             ], 500);
         }
-    }
-
-    /**
-     * Auto-detect column mappings based on header names
-     */
-    private function autoDetectColumns($headers)
-    {
-        $mappings = [
-            'date' => null,
-            'description' => null,
-            'withdraw' => null,
-            'deposit' => null,
-            'balance' => null,
-        ];
-
-        $patterns = [
-            'date' => ['date', 'transaction date', 'txn date', 'posting date', 'trans date', 'value date'],
-            'description' => ['description', 'desc', 'particulars', 'details', 'narration', 'remarks', 'transaction details'],
-            'withdraw' => ['withdraw', 'withdrawal', 'debit', 'dr', 'amount debited', 'debit amount', 'paid out'],
-            'deposit' => ['deposit', 'credit', 'cr', 'amount credited', 'credit amount', 'paid in'],
-            'balance' => ['balance', 'closing balance', 'available balance', 'running balance', 'current balance'],
-        ];
-
-        foreach ($headers as $index => $header) {
-            $headerLower = strtolower(trim($header));
-            
-            foreach ($patterns as $field => $fieldPatterns) {
-                foreach ($fieldPatterns as $pattern) {
-                    if ($headerLower === $pattern || strpos($headerLower, $pattern) !== false) {
-                        if ($mappings[$field] === null) {
-                            $mappings[$field] = $index;
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $mappings;
     }
 
     /**
@@ -110,6 +89,7 @@ class ImportController extends Controller
             'bank_name' => 'required|string|max:100',
             'column_mappings' => 'nullable|json',
             'date_format' => 'required|string|in:d/m/Y,d/m/y,m/d/Y,Y-m-d',
+            'parser_type' => 'nullable|string|in:standard,credit-debit',
         ], [
             'file.required' => 'Please select a file to import.',
             'file.mimes' => 'File must be in Excel (.xlsx, .xls) or CSV format.',
@@ -118,6 +98,7 @@ class ImportController extends Controller
             'bank_name.max' => 'Bank name cannot exceed 100 characters.',
             'date_format.required' => 'Please select a date format.',
             'date_format.in' => 'Invalid date format selected.',
+            'parser_type.in' => 'Invalid parser type selected.',
         ]);
 
         try {
@@ -125,6 +106,10 @@ class ImportController extends Controller
             $bankName = $request->bank_name;
             $columnMappings = $request->column_mappings ? json_decode($request->column_mappings, true) : null;
             $dateFormat = $request->date_format;
+            $parserType = $request->parser_type ?? 'standard';
+            
+            // Get the appropriate parser
+            $parser = $this->parserFactory->getParser($parserType);
             
             // Ensure bank exists in banks table
             \App\Models\Bank::firstOrCreate(['name' => $bankName]);
@@ -141,29 +126,11 @@ class ImportController extends Controller
                 ], 400);
             }
 
-            // Get column indexes - either from mappings or by exact match
+            // Get column mappings
             if ($columnMappings) {
-                // Use provided column mappings
-                $dateIdx = $columnMappings['date'] ?? null;
-                $descIdx = $columnMappings['description'] ?? null;
-                $withdrawIdx = $columnMappings['withdraw'] ?? null;
-                $depositIdx = $columnMappings['deposit'] ?? null;
-                $balanceIdx = $columnMappings['balance'] ?? null;
-
-                // Validate that all required columns are mapped
-                $missingMappings = [];
-                if ($dateIdx === null) $missingMappings[] = 'date';
-                if ($descIdx === null) $missingMappings[] = 'description';
-                if ($balanceIdx === null) $missingMappings[] = 'balance';
-
-                if (!empty($missingMappings)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Please map the following required columns: ' . implode(', ', $missingMappings) . '. These fields are mandatory for importing transactions.',
-                    ], 400);
-                }
+                // Use provided column mappings - already validated by frontend
             } else {
-                // Try exact column name matching (case-insensitive) - backward compatibility
+                // Try exact column name matching for backward compatibility
                 $headers = array_map('trim', array_map('strtolower', $rows[0]));
                 $requiredColumns = ['date', 'description', 'withdraw', 'deposit', 'balance'];
                 
@@ -180,22 +147,33 @@ class ImportController extends Controller
                         'message' => 'Your file is missing required columns: ' . implode(', ', $missingColumns) . '. Please use the column mapping feature to map your columns correctly.',
                         'required' => $requiredColumns,
                         'found' => array_values(array_filter($rows[0], fn($v) => !empty(trim($v)))),
-                        'needs_mapping' => true, // Signal that column mapping is needed
+                        'needs_mapping' => true,
                     ], 400);
                 }
 
-                // Get column indexes from exact match
-                $dateIdx = array_search('date', $headers);
-                $descIdx = array_search('description', $headers);
-                $withdrawIdx = array_search('withdraw', $headers);
-                $depositIdx = array_search('deposit', $headers);
-                $balanceIdx = array_search('balance', $headers);
+                // Build column mappings from exact match (for standard parser only)
+                $columnMappings = [
+                    'date' => array_search('date', $headers),
+                    'description' => array_search('description', $headers),
+                    'withdraw' => array_search('withdraw', $headers),
+                    'deposit' => array_search('deposit', $headers),
+                    'balance' => array_search('balance', $headers),
+                ];
+            }
+
+            // Validate that all required columns are mapped for the selected parser
+            $missingMappings = $parser->validateMappings($columnMappings);
+            if (!empty($missingMappings)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please map the following required columns: ' . implode(', ', $missingMappings) . '. These fields are mandatory for importing transactions.',
+                ], 400);
             }
 
             $transactions = [];
             $errors = [];
 
-            // Process data rows
+            // Process data rows using the parser
             for ($i = 1; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 
@@ -205,40 +183,10 @@ class ImportController extends Controller
                 }
 
                 try {
-                    $date = $this->parseDate($row[$dateIdx], $dateFormat);
-                    
-                    if (!$date) {
-                        $formatDisplay = $this->getDateFormatDisplay($dateFormat);
-                        $errors[] = "Row " . ($i + 1) . ": The date '{$row[$dateIdx]}' is not in the expected format. Expected {$formatDisplay}";
-                        continue;
+                    $transaction = $parser->parseRow($row, $columnMappings, $dateFormat, $bankName);
+                    if ($transaction) {
+                        $transactions[] = $transaction;
                     }
-
-                    $withdraw = $this->parseAmount($row[$withdrawIdx] ?? '');
-                    $deposit = $this->parseAmount($row[$depositIdx] ?? '');
-                    $balance = $this->parseAmount($row[$balanceIdx] ?? '');
-
-                    if ($balance === null) {
-                        $errors[] = "Row " . ($i + 1) . ": Balance field is required and must contain a valid number";
-                        continue;
-                    }
-
-                    if ($withdraw === null && $deposit === null) {
-                        $errors[] = "Row " . ($i + 1) . ": Either Withdraw or Deposit must have a value (both cannot be empty)";
-                        continue;
-                    }
-
-                    $transactions[] = [
-                        'bank_name' => $bankName,
-                        'date' => $date,
-                        'description' => trim($row[$descIdx] ?? ''),
-                        'withdraw' => $withdraw,
-                        'deposit' => $deposit,
-                        'balance' => $balance,
-                        'year' => (int) $date->format('Y'),
-                        'month' => (int) $date->format('m'),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
                 } catch (\Exception $e) {
                     $errors[] = "Row " . ($i + 1) . ": " . $e->getMessage();
                 }
@@ -284,97 +232,5 @@ class ImportController extends Controller
                 'message' => 'Import failed due to an unexpected error. Please verify your file format and try again.'
             ], 500);
         }
-    }
-
-    /**
-     * Parse date using the specified format
-     */
-    private function parseDate($value, $format)
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        // Try to parse as Excel date number first
-        if (is_numeric($value)) {
-            try {
-                $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
-                return \Carbon\Carbon::instance($date);
-            } catch (\Exception $e) {
-                // Continue to try the specified format
-            }
-        }
-
-        // Try to parse with the specified format
-        try {
-            $date = \Carbon\Carbon::createFromFormat($format, trim($value));
-            if ($date && $date->format($format) === trim($value)) {
-                // Validate that the parsed date matches the input exactly
-                return $date;
-            }
-        } catch (\Exception $e) {
-            // Format parsing failed
-        }
-
-        // Try variant formats (replace separators)
-        $separators = ['/', '-', '.'];
-        $currentSeparator = '/';
-        if (strpos($format, '-') !== false) {
-            $currentSeparator = '-';
-        } elseif (strpos($format, '.') !== false) {
-            $currentSeparator = '.';
-        }
-
-        foreach ($separators as $separator) {
-            if ($separator === $currentSeparator) {
-                continue;
-            }
-            
-            $variantFormat = str_replace($currentSeparator, $separator, $format);
-            try {
-                $date = \Carbon\Carbon::createFromFormat($variantFormat, trim($value));
-                if ($date && $date->format($variantFormat) === trim($value)) {
-                    return $date;
-                }
-            } catch (\Exception $e) {
-                continue;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get display format for date format code
-     */
-    private function getDateFormatDisplay($format)
-    {
-        $displays = [
-            'd/m/Y' => 'DD/MM/YYYY (e.g., 15/03/2024)',
-            'd/m/y' => 'DD/MM/YY (e.g., 15/03/24)',
-            'm/d/Y' => 'MM/DD/YYYY (e.g., 03/15/2024)',
-            'Y-m-d' => 'YYYY-MM-DD (e.g., 2024-03-15)',
-        ];
-
-        return $displays[$format] ?? $format;
-    }
-
-    /**
-     * Parse amount from string
-     */
-    private function parseAmount($value)
-    {
-        if (empty($value) || trim($value) === '' || trim($value) === '-') {
-            return null;
-        }
-
-        // Remove currency symbols and commas
-        $cleaned = preg_replace('/[^0-9.-]/', '', $value);
-        
-        if ($cleaned === '' || $cleaned === '-') {
-            return null;
-        }
-
-        return (float) $cleaned;
     }
 }
