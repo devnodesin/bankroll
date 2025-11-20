@@ -21,12 +21,12 @@ class CreditDebitTransactionParser extends BaseTransactionParser
     /**
      * Supported credit transaction indicators
      */
-    public const CREDIT_INDICATORS = ['CR', 'CREDIT', 'C', 'CREDITED'];
+    public const CREDIT_INDICATORS = ['CR', 'CR.', 'CREDIT', 'C', 'CREDITED'];
     
     /**
      * Supported debit transaction indicators
      */
-    public const DEBIT_INDICATORS = ['DR', 'DEBIT', 'D', 'DEBITED'];
+    public const DEBIT_INDICATORS = ['DR', 'DR.', 'DEBIT', 'D', 'DEBITED'];
     
     public function getIdentifier(): string
     {
