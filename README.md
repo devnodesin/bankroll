@@ -74,6 +74,23 @@ php artisan serve
 
 Access at `http://localhost:8000` with credentials: `admin` / `password123`
 
+## 🌐 Subdirectory Hosting
+
+To host Bankroll in a subdirectory (e.g., `example.com/bank`), update your `.env`:
+
+```env
+APP_URL=https://example.com/bank
+ASSET_URL=https://example.com/bank
+ROUTE_PREFIX=bank
+```
+
+Then clear the config cache:
+
+```bash
+php artisan config:clear
+php artisan route:clear
+```
+
 ## 🔧 User Management
 
 ```bash

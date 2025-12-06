@@ -3,14 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 
-// Authentication routes
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
-Route::post('/login', [LoginController::class, 'login'])->middleware('guest');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+// Get route prefix from environment variable (for subdirectory hosting)
+$routePrefix = env('ROUTE_PREFIX', '');
 
-// Protected routes
-Route::middleware('auth')->group(function () {
-    Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::prefix($routePrefix)->group(function () {
+    // Authentication routes
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
+    Route::post('/login', [LoginController::class, 'login'])->middleware('guest');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
+    // Protected routes
+    Route::middleware('auth')->group(function () {
+        Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::post('/transactions/get', [App\Http\Controllers\HomeController::class, 'getTransactions'])->name('transactions.get');
     Route::post('/transactions/available-months', [App\Http\Controllers\HomeController::class, 'getAvailableMonths'])->name('transactions.available-months');
     Route::patch('/transactions/{transaction}', [App\Http\Controllers\HomeController::class, 'updateTransaction'])->name('transactions.update');
@@ -36,5 +40,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/rules', [App\Http\Controllers\RuleController::class, 'store'])->name('rules.store');
     Route::put('/rules/{rule}', [App\Http\Controllers\RuleController::class, 'update'])->name('rules.update');
     Route::delete('/rules/{rule}', [App\Http\Controllers\RuleController::class, 'destroy'])->name('rules.destroy');
-    Route::post('/rules/apply', [App\Http\Controllers\RuleController::class, 'applyRules'])->name('rules.apply');
+        Route::post('/rules/apply', [App\Http\Controllers\RuleController::class, 'applyRules'])->name('rules.apply');
+    });
 });
